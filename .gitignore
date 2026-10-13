@@ -3,3 +3,8 @@ dist
 *.local
 save
 ciqual
+/.idea/.gitignore
+/.idea/flex-and-meal.iml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/vcs.xml
