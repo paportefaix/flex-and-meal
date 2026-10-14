@@ -1,0 +1,26 @@
+<mat-card appearance="outlined" class="card">
+  <div class="card-head">
+    <h2>Cardio</h2>
+    <span class="muted small">
+      {{ list().length }} sortie{{ list().length > 1 ? 's' : '' }} · {{ fmtDuration(minutes()) }}{{ km() > 0 ? ' · ' + fr(km()) + ' km' : '' }}
+    </span>
+  </div>
+  <div class="row">
+    <span class="muted small">Date</span>
+    <div style="width: 11rem"><app-date-field [(value)]="date" label="Date de la sortie" /></div>
+  </div>
+  <app-cardio-form [date]="date() || today" />
+  <p class="muted small">Calories laissées vides : estimation automatique (MET × poids × durée) pour les activités de la liste.</p>
+  @if (list().length > 0) {
+    <ul class="items">
+      @for (w of list().slice(0, 10); track w.id) {
+        <li>
+          <span>{{ w.activity }} <span class="muted small">{{ fmtShort(w.date) }}</span></span>
+          <span class="muted">{{ w.duration }} min{{ w.distanceKm ? ' · ' + fr(w.distanceKm) + ' km' : '' }}</span>
+          <span class="num">{{ round(w.kcal) }} kcal</span>
+          <button mat-icon-button (click)="remove(w.id)" [attr.aria-label]="'Retirer ' + w.activity">×</button>
+        </li>
+      }
+    </ul>
+  }
+</mat-card>

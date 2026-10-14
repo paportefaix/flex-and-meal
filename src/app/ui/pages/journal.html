@@ -1,0 +1,53 @@
+<div class="date-nav">
+  <button mat-stroked-button (click)="setDate(shift(-1))" aria-label="Jour précédent">←</button>
+  <app-date-field [value]="date()" (valueChange)="setDate($event)" label="Date du journal" />
+  <button mat-stroked-button (click)="setDate(shift(1))" aria-label="Jour suivant">→</button>
+  @if (date() !== today) {
+    <button mat-stroked-button (click)="setDate(today)">Aujourd'hui</button>
+  }
+</div>
+<h1 class="capitalize">{{ title() }}</h1>
+
+<mat-card appearance="outlined" class="card">
+  <app-day-summary [intake]="totals().intake" [burned]="totals().burned" [goal]="data().settings.kcalGoal" [settings]="data().settings" />
+</mat-card>
+
+@for (m of meals; track m.key) {
+  <mat-card appearance="outlined" class="card">
+    <div class="card-head">
+      <h2>{{ m.label }}</h2>
+      <span class="badge">{{ round(kcal(m.key)) }} kcal</span>
+    </div>
+    @if (items(m.key).length > 0) {
+      <ul class="items">
+        @for (i of items(m.key); track i.id) {
+          <li>
+            <span>{{ i.name }}</span>
+            <span class="muted">{{ round(i.quantity, 1) }} {{ i.unit }}</span>
+            <span class="num">{{ round(i.kcal) }} kcal</span>
+            <button mat-icon-button (click)="remove(i.id)" [attr.aria-label]="'Retirer ' + i.name">×</button>
+          </li>
+        }
+      </ul>
+    }
+    <app-food-picker (add)="addFood(m.key, $event.food, $event.quantity)" />
+    <div class="row wrap">
+      @if (data().templates.length > 0) {
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <select matNativeControl aria-label="Repas type" (change)="pickTemplate(m.key, $event)">
+            <option value="">+ Repas type…</option>
+            @for (t of data().templates; track t.id) {
+              <option [value]="t.id">{{ t.name }}</option>
+            }
+          </select>
+        </mat-form-field>
+      }
+      <app-quick-add (add)="addQuick(m.key, $event.name, $event.kcal)" />
+      @if (hasFoods(m.key)) {
+        <button mat-stroked-button (click)="saveAsTemplate(m.key)">Enregistrer comme repas type</button>
+      }
+    </div>
+  </mat-card>
+}
+
+<app-workouts [date]="date()" />

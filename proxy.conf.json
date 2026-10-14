@@ -1,0 +1,15 @@
+{
+  "/off-search": {
+    "target": "https://search.openfoodfacts.org",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": { "^/off-search": "/search" },
+    "headers": { "User-Agent": "flex-and-meal/0.1 (usage personnel)" }
+  },
+  "/hevy-api": {
+    "target": "https://api.hevyapp.com",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": { "^/hevy-api": "" }
+  }
+}

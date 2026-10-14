@@ -1,0 +1,45 @@
+<mat-card appearance="outlined" class="card" aria-label="Cette semaine">
+  <div class="card-head">
+    <h2>Cette semaine</h2>
+    <span class="muted small">{{ fmtShort(thisWeek()) }} – {{ fmtShort(weekEnd()) }}</span>
+  </div>
+  <div class="week-kpis">
+    <div class="kpi">
+      <span class="kpi-label">Séances</span>
+      <span class="kpi-value">
+        {{ cur().sessions }}@if (target() !== null) {<small> / {{ target() }}</small>}
+      </span>
+      @if (dots() > 0 && dots() <= 7) {
+        <span class="dots" aria-hidden="true">
+          @for (i of dotList(); track i) {
+            <i [class.on]="i < cur().sessions"></i>
+          }
+        </span>
+      }
+      @if (target() !== null) {
+        <span class="muted small">habituel : {{ target() }} / sem.</span>
+      }
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">Volume</span>
+      <span class="kpi-value">{{ tonnes(cur().volume) }}<small> t</small></span>
+      <span class="small" [class]="volumeDelta() === null ? 'small muted' : volumeDelta()! >= 0 ? 'small good' : 'small bad'">
+        {{ volumeText() }}
+      </span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">Dernier record</span>
+      @if (lastPR(); as pr) {
+        <span class="kpi-value kpi-text">{{ pr.name }}</span>
+        <span class="small"><span class="badge tag raw" style="margin-left: 0">PR</span> 1RM ≈ {{ fr(pr.best1RM) }} kg · {{ fmtShort(pr.best1RMDate) }}</span>
+      } @else {
+        <span class="muted small">Aucun pour l'instant</span>
+      }
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">Régularité</span>
+      <span class="kpi-value">{{ streaks().current }}<small> sem.</small></span>
+      <span class="muted small">de suite · record {{ streaks().best }}</span>
+    </div>
+  </div>
+</mat-card>

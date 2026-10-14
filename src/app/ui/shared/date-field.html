@@ -1,0 +1,6 @@
+<mat-form-field appearance="outline" subscriptSizing="dynamic">
+  <input matInput [matDatepicker]="picker" [value]="date()" [required]="required()" placeholder="jj/mm/aaaa"
+         [attr.aria-label]="label()" (dateChange)="change($event.value)" />
+  <mat-datepicker-toggle matIconSuffix [for]="picker" />
+  <mat-datepicker #picker />
+</mat-form-field>

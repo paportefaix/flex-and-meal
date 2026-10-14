@@ -1,0 +1,5 @@
+<mat-button-toggle-group hideSingleSelectionIndicator [attr.aria-label]="label()" [value]="value()" (change)="value.set($event.value)">
+  @for (o of options(); track o.label) {
+    <mat-button-toggle [value]="o.value">{{ o.label }}</mat-button-toggle>
+  }
+</mat-button-toggle-group>

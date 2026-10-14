@@ -1,0 +1,68 @@
+<div class="date-nav">
+  <button mat-stroked-button (click)="shift(-7)" aria-label="Semaine précédente">←</button>
+  <span>{{ range() }}</span>
+  <button mat-stroked-button (click)="shift(7)" aria-label="Semaine suivante">→</button>
+  @if (start() !== thisWeekStart) {
+    <button mat-stroked-button (click)="setStart(today)">Cette semaine</button>
+  }
+</div>
+<h1>Semaine</h1>
+
+<mat-card appearance="outlined" class="card">
+ <div class="stats stats-row">
+  <app-stat label="Moyenne / jour" [value]="round(avgIntake())" />
+  <app-stat label="Net moyen / jour" [value]="round(avgNet())" />
+  <app-stat label="Bilan vs objectif" [value]="signed(balance(), 0)" [tone]="balance() > 0 ? 'bad' : 'good'" />
+  <app-stat label="Sport" [value]="sessions() + ' séance' + (sessions() > 1 ? 's' : '')" [unit]="minutes() + ' min'" />
+  @if (strengthSessions().length > 0) {
+    <app-stat
+      label="Muscu"
+      [value]="strengthSessions().length + ' séance' + (strengthSessions().length > 1 ? 's' : '')"
+      [unit]="strengthUnit()"
+    />
+  }
+  @if (weightDelta() !== null) {
+    <app-stat label="Poids" [value]="signed(weightDelta()!)" unit="kg" [tone]="weightDelta()! > 0 ? 'bad' : 'good'" />
+  }
+ </div>
+</mat-card>
+<mat-card appearance="outlined" class="card">
+  <h2>Macros moyens / jour</h2>
+  <div class="stats">
+    @for (m of macros(); track m.key) {
+      <app-stat [label]="m.label" [value]="round(m.value)" unit="g" [tone]="m.tone" />
+    }
+  </div>
+</mat-card>
+<p class="muted small">Moyennes calculées sur les {{ logged().length }} jour(s) renseigné(s).</p>
+
+<mat-card appearance="outlined" class="card">
+  <app-chart [data]="chart()" [look]="{ legend: true }" [height]="260" label="Calories consommées et dépensées sur la semaine" />
+</mat-card>
+
+<mat-card appearance="outlined" class="card">
+  <table class="plain">
+    <thead>
+      <tr>
+        <th>Jour</th>
+        <th class="num">Consommées</th>
+        <th class="num">Prot.</th>
+        <th class="num">Sport</th>
+        <th class="num">Net</th>
+        <th class="num">Écart</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (d of days(); track d.date) {
+        <tr>
+          <td class="capitalize"><a routerLink="/journal" [queryParams]="{ d: d.date }">{{ fmtDay(d.date) }}</a></td>
+          <td class="num">{{ d.hasEntries ? round(d.intake.kcal) : '—' }}</td>
+          <td class="num">{{ d.hasEntries ? round(d.intake.protein) + ' g' : '—' }}</td>
+          <td class="num">{{ d.burned ? round(d.burned) : '—' }}</td>
+          <td class="num">{{ d.hasEntries ? round(d.net) : '—' }}</td>
+          <td class="num" [class]="d.net > goal() ? 'bad' : 'good'">{{ d.hasEntries ? signed(d.net - goal(), 0) : '—' }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</mat-card>

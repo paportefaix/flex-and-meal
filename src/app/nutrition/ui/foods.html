@@ -1,0 +1,74 @@
+<h1>Aliments</h1>
+<mat-card appearance="outlined" class="card">
+  <h2>{{ editingId() ? 'Modifier l’aliment' : 'Nouvel aliment' }}</h2>
+  <form class="grid-form" (ngSubmit)="submit()">
+    <div class="span2">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Nom</mat-label>
+        <input matInput name="name" required autocomplete="off" [ngModel]="draft().name" (ngModelChange)="rename($event)" />
+      </mat-form-field>
+      @if (!editingId() && !suppressed()) {
+        <app-food-search [query]="draft().name" [minLength]="3" (picked)="pick($event)" />
+      }
+    </div>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Unité</mat-label>
+      <select matNativeControl name="unit" [ngModel]="draft().unit" (ngModelChange)="set('unit', $event)">
+        @for (u of units; track u) {
+          <option [value]="u">{{ unitBasis(u) }}</option>
+        }
+      </select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Calories (kcal)</mat-label>
+      <input matInput name="kcal" inputmode="decimal" required [ngModel]="draft().kcal" (ngModelChange)="set('kcal', $event)" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Protéines (g)</mat-label>
+      <input matInput name="protein" inputmode="decimal" placeholder="optionnel" [ngModel]="draft().protein" (ngModelChange)="set('protein', $event)" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Glucides (g)</mat-label>
+      <input matInput name="carbs" inputmode="decimal" placeholder="optionnel" [ngModel]="draft().carbs" (ngModelChange)="set('carbs', $event)" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Lipides (g)</mat-label>
+      <input matInput name="fat" inputmode="decimal" placeholder="optionnel" [ngModel]="draft().fat" (ngModelChange)="set('fat', $event)" />
+    </mat-form-field>
+    <div class="row span2">
+      <button mat-flat-button>{{ editingId() ? 'Enregistrer' : 'Ajouter' }}</button>
+      @if (editingId()) {
+        <button mat-stroked-button type="button" (click)="cancel()">Annuler</button>
+      }
+    </div>
+  </form>
+</mat-card>
+
+<mat-card appearance="outlined" class="card">
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <input matInput type="search" name="filter" placeholder="Filtrer…" aria-label="Filtrer" [(ngModel)]="search" />
+  </mat-form-field>
+  <table class="plain">
+    <thead>
+      <tr>
+        <th>Aliment</th>
+        <th class="num">kcal</th>
+        <th class="num hide-sm">P / G / L</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (f of foods(); track f.id) {
+        <tr>
+          <td>{{ f.name }} <span class="muted small">{{ unitBasis(f.unit) }}</span></td>
+          <td class="num">{{ round(f.kcal) }}</td>
+          <td class="num hide-sm muted">{{ f.protein ?? '–' }} / {{ f.carbs ?? '–' }} / {{ f.fat ?? '–' }}</td>
+          <td class="actions">
+            <button mat-stroked-button (click)="edit(f)">Modifier</button>
+            <button mat-icon-button (click)="remove(f)" [attr.aria-label]="'Supprimer ' + f.name">×</button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</mat-card>

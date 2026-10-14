@@ -1,0 +1,42 @@
+<mat-card appearance="outlined" class="card">
+  <h2>Régularité</h2>
+  <div class="stats">
+    <app-stat label="Série en cours" [value]="streaks().current" [unit]="'semaine' + (streaks().current > 1 ? 's' : '')" [tone]="streaks().current >= 2 ? 'good' : undefined" />
+    <app-stat label="Record" [value]="streaks().best" [unit]="'semaine' + (streaks().best > 1 ? 's' : '')" />
+    <app-stat label="Séances / semaine" [value]="fr(total() / trendWeeks)" [unit]="'sur ' + trendWeeks + ' sem.'" />
+    <app-stat label="Semaines actives" [value]="activeWeeks() + ' / ' + trendWeeks" unit="" />
+  </div>
+
+  <div class="heatmap scroll-x">
+    <div class="heatmap-days small muted">
+      @for (d of weekdays; track $index) {
+        <span>{{ d }}</span>
+      }
+    </div>
+    @for (week of heat(); track week[0].date) {
+      <div class="heatmap-week">
+        @for (d of week; track d.date) {
+          <a routerLink="/journal" [queryParams]="{ d: d.date }" [class]="'cell ' + (d.future ? 'future' : d.count >= 2 ? 'lvl2' : d.count === 1 ? 'lvl1' : '')"
+             [title]="fmtDate(d.date) + (d.future ? '' : ' — ' + (d.count ? d.count + ' séance' + (d.count > 1 ? 's' : '') : 'repos'))"
+             [attr.aria-label]="fmtDate(d.date) + ' : ' + d.count + ' séance' + (d.count > 1 ? 's' : '')"></a>
+        }
+      </div>
+    }
+  </div>
+  <div class="legend small">
+    <span><i class="cell"></i>Repos</span>
+    <span><i class="cell lvl1"></i>1 séance</span>
+    <span><i class="cell lvl2"></i>2 séances ou plus</span>
+  </div>
+
+  <h2 style="margin-top: 1rem">Séances par semaine</h2>
+  <app-chart [data]="perWeek()" [look]="{ integer: true, titlePrefix: 'Semaine du ' }" [height]="150" label="Séances par semaine" />
+
+  <h2 style="margin-top: 1rem">Durée et densité</h2>
+  @if (density().length >= 2) {
+    <app-chart [data]="densityData()" [look]="densityLook" [height]="200" label="Durée et densité des séances" />
+    <p class="muted small">Densité = tonnage de la séance ÷ durée (kg par minute) : plus elle monte à durée égale, plus tu fais de travail dans le même temps. {{ density().length }} dernières séances avec durée.</p>
+  } @else {
+    <p class="muted small">Il faut au moins deux séances avec une durée enregistrée.</p>
+  }
+</mat-card>

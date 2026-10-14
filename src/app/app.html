@@ -1,0 +1,27 @@
+<mat-toolbar>
+  <span class="brand">Flex & Meal</span>
+  <nav mat-tab-nav-bar [tabPanel]="panel" mat-stretch-tabs="false" aria-label="Navigation principale">
+    @for (l of links; track l.to) {
+      <a mat-tab-link [routerLink]="l.to" routerLinkActive #rla="routerLinkActive" [active]="rla.isActive"
+         [routerLinkActiveOptions]="{ exact: true }">{{ l.label }}</a>
+    }
+  </nav>
+</mat-toolbar>
+<main>
+  @if (store.saveError()) {
+    <mat-card appearance="outlined" class="card">
+      <p class="danger small">L'enregistrement dans la base locale a échoué : exportez vos données depuis les Réglages.</p>
+    </mat-card>
+  }
+  @if (remind()) {
+    <mat-card appearance="outlined" class="card">
+      <p class="small">
+        Vos données n'ont pas été sauvegardées récemment.
+        <a routerLink="/reglages">Activer la sauvegarde automatique ou exporter</a>
+      </p>
+    </mat-card>
+  }
+  <mat-tab-nav-panel #panel>
+    <router-outlet />
+  </mat-tab-nav-panel>
+</main>

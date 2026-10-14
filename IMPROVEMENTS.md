@@ -50,7 +50,7 @@ Status: ✅ done · 🔜 suggested next · 💡 backlog
 - 💡 **Schema versioning and migrations** — `version: 1` is hardcoded in `parseData`; add a migration path before the types grow further.
 - 💡 **Unit tests** for `dayTotals`, `computeInsights` and backup import/export — the places where a silent bug would corrupt or mislead.
 - 💡 Manual dark/light toggle; i18n if the app is ever shared.
-- 💡 Code-split the bundle (Recharts pushes it past 500 kB).
+- ✅ Code-split the bundle: routes are lazy-loaded (Angular migration).
 
 ## Suggested order for the next round
 

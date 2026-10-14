@@ -1,0 +1,97 @@
+<h1>Analyses</h1>
+@if (!data().log.length) {
+  <p class="muted">Renseignez quelques repas dans le <a routerLink="/journal">journal</a> pour voir apparaître vos analyses.</p>
+} @else {
+  <mat-card appearance="outlined" class="card">
+    <h2>À retenir</h2>
+    <ul class="notes">
+      @for (n of i().notes; track n) {
+        <li>{{ n }}</li>
+      }
+    </ul>
+  </mat-card>
+
+  <mat-card appearance="outlined" class="card">
+    <div class="stats stats-row stats-row-2">
+      <app-stat label="Série en cours" [value]="i().streak" [unit]="i().streak > 1 ? 'jours' : 'jour'" />
+      <app-stat label="Jours renseignés (28 j)" [value]="i().loggedLast28" unit="/ 28" />
+      <app-stat label="Dans la cible (28 j)" [value]="i().onTarget28" [unit]="'/ ' + i().loggedLast28" />
+      @if (i().proteinGoal) {
+        <app-stat label="Protéines atteintes (28 j)" [value]="i().proteinHit28 ?? 0" [unit]="'/ ' + i().loggedLast28" />
+      }
+    </div>
+  </mat-card>
+
+  <mat-card appearance="outlined" class="card">
+    <h2>Répartition des macros (moyenne sur 28 jours)</h2>
+    @if (i().split; as split) {
+      <div class="split-bar" role="img" aria-label="Répartition des calories entre protéines, glucides et lipides">
+        @for (m of macros; track m.key) {
+          <div [style.width.%]="split[m.key]" [style.background]="m.color" [title]="m.label + ' ' + round(split[m.key]) + ' %'"></div>
+        }
+      </div>
+      <div class="legend small">
+        @for (m of macros; track m.key) {
+          <span><i [style.background]="m.color"></i> {{ m.label }} {{ round(split[m.key]) }} % · {{ round(i().avg28[m.key]) }} g / jour</span>
+        }
+      </div>
+    } @else {
+      <p class="muted">Pas assez de données.</p>
+    }
+  </mat-card>
+
+  <mat-card appearance="outlined" class="card">
+    <h2>Moyenne par jour de la semaine</h2>
+    <p class="muted small">Calories consommées, sur les 12 dernières semaines.</p>
+    <app-chart [data]="weekdayChart()" [look]="{ unit: 'kcal' }" [height]="220" label="Calories moyennes par jour de la semaine" />
+  </mat-card>
+
+  <mat-card appearance="outlined" class="card">
+    <h2>Calendrier</h2>
+    <p class="muted small">Net (consommées − sport) par rapport à l'objectif, à ±10 %.</p>
+    <div class="heatmap scroll-x">
+      <div class="heatmap-days small muted">
+        @for (d of weekdays; track d) {
+          <span>{{ d[0] }}</span>
+        }
+      </div>
+      @for (week of i().heatmap; track week[0].date) {
+        <div class="heatmap-week">
+          @for (d of week; track d.date) {
+            <a
+              routerLink="/journal"
+              [queryParams]="{ d: d.date }"
+              class="cell"
+              [class]="'cell ' + (d.future ? 'future' : d.status)"
+              [title]="fmtDate(d.date) + ' — ' + (d.future ? '' : statusLabel[d.status])"
+              [attr.aria-label]="fmtDate(d.date) + ' — ' + statusLabel[d.status]"
+            ></a>
+          }
+        </div>
+      }
+    </div>
+    <div class="legend small">
+      @for (s of statuses; track s) {
+        <span><i [class]="'cell ' + s"></i> {{ statusLabel[s] }}</span>
+      }
+    </div>
+  </mat-card>
+
+  @if (i().waist; as waist) {
+    <mat-card appearance="outlined" class="card">
+      <h2>Tour de taille</h2>
+      <div class="stats">
+        <app-stat [label]="'Dernière mesure (' + fmtDate(waist.date, { day: 'numeric', month: 'short' }) + ')'" [value]="round(waist.value, 1)" unit="cm" />
+        @if (waist.change !== null) {
+          <app-stat label="Depuis la première mesure" [value]="(waist.change > 0 ? '+' : '') + round(waist.change, 1)" unit="cm" [tone]="waist.change > 0 ? 'bad' : 'good'" />
+        }
+        @if (waist.ratio) {
+          <app-stat label="Taille / hauteur" [value]="waist.ratio.toFixed(2)" unit="" [tone]="waist.ratio > 0.5 ? 'bad' : 'good'" />
+        }
+      </div>
+      @if (!data().settings.heightCm) {
+        <p class="muted small">Renseignez votre taille dans les <a routerLink="/reglages">réglages</a> pour obtenir le ratio.</p>
+      }
+    </mat-card>
+  }
+}

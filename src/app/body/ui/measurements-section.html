@@ -1,0 +1,78 @@
+<mat-card appearance="outlined" class="card">
+  <h2>Mensurations (cm)</h2>
+
+  @if (usedKeys().length > 0) {
+    <div class="stats">
+      @for (m of usedKeys(); track m.key) {
+        <app-stat [label]="m.label" [value]="lastValue(m.key)!" [unit]="'cm (' + signed(delta(m.key)) + ')'" [tone]="delta(m.key) > 0 ? 'bad' : delta(m.key) < 0 ? 'good' : undefined" />
+      }
+    </div>
+  }
+
+  <details class="how-to-measure" open>
+    <summary>Où prendre les mesures ?</summary>
+    <app-body-diagram [active]="focused()" />
+  </details>
+
+  <form (submit)="$event.preventDefault(); blurActive()">
+    <div class="grid-form">
+      <div class="span2">
+        <app-date-field [(value)]="date" [required]="true" label="Date du relevé" />
+      </div>
+      @for (m of measures; track m.key) {
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>{{ m.label }}</mat-label>
+          <input matInput [name]="m.key" inputmode="decimal" autocomplete="off" [placeholder]="lastValue(m.key)?.toString() ?? 'cm'"
+                 [value]="values()[m.key] ?? ''" (input)="setValue(m.key, $any($event.target).value)"
+                 (focus)="focused.set(m.key)" (blur)="focused.set(null); saveField(m.key)" />
+        </mat-form-field>
+      }
+    </div>
+    <p class="muted small">Chaque mesure est enregistrée automatiquement en quittant le champ.</p>
+  </form>
+
+  @if (usedKeys().length > 0) {
+    <div class="row wrap chips">
+      @for (m of usedKeys(); track m.key) {
+        @if (selected() === m.key) {
+          <button mat-flat-button aria-pressed="true">{{ m.label }}</button>
+        } @else {
+          <button mat-stroked-button aria-pressed="false" (click)="selected.set(m.key)">{{ m.label }}</button>
+        }
+      }
+    </div>
+    @if (series().length >= 2) {
+      <app-chart type="line" [data]="chart()" [look]="chartLook()" [height]="220" [label]="'Évolution : ' + selectedLabel()" />
+    } @else {
+      <p class="muted small">Il faut au moins deux relevés pour afficher la courbe.</p>
+    }
+
+    <details>
+      <summary>Historique ({{ entries().length }})</summary>
+      <div class="scroll-x">
+        <table class="plain">
+          <thead>
+            <tr>
+              <th>Date</th>
+              @for (m of usedKeys(); track m.key) {
+                <th class="num">{{ m.label }}</th>
+              }
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of reversed(); track e.id) {
+              <tr>
+                <td>{{ fmtShort(e.date) }}</td>
+                @for (m of usedKeys(); track m.key) {
+                  <td class="num">{{ e.values[m.key] ?? '—' }}</td>
+                }
+                <td class="actions"><button mat-icon-button (click)="remove(e.id)" aria-label="Supprimer">×</button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </details>
+  }
+</mat-card>

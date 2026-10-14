@@ -1,0 +1,58 @@
+<div class="food-search">
+  <div class="search-bar">
+    <mat-button-toggle-group hideSingleSelectionIndicator [value]="source()" (change)="source.set($event.value)" aria-label="Source de recherche">
+      <mat-button-toggle value="local">Ma base + CIQUAL</mat-button-toggle>
+      <mat-button-toggle value="online">Open Food Facts</mat-button-toggle>
+    </mat-button-toggle-group>
+    @if (source() === 'online') {
+      <mat-checkbox class="small" [checked]="rawOnly()" (change)="rawOnly.set($event.checked)">Bruts uniquement</mat-checkbox>
+    }
+  </div>
+
+  @if (active()) {
+    <ul class="off-results">
+      @if (loading()) {
+        <li class="muted small">Recherche…</li>
+      }
+      @if (error()) {
+        <li class="muted small">{{ error() }}</li>
+      }
+
+      @if (source() === 'local') {
+        @if (!loading() && !error() && local().length === 0) {
+          <li class="muted small">Aucun résultat.</li>
+        }
+        @for (r of local(); track r.food.id) {
+          <li>
+            <button mat-button type="button" (click)="picked.emit(plain(r.food))">
+              <span>
+                {{ r.food.name }} <span [class]="'badge tag ' + r.origin">{{ r.origin === 'perso' ? 'Mes aliments' : 'CIQUAL' }}</span>
+              </span>
+              <span class="muted small">{{ r.group ? r.group + ' · ' : '' }}{{ macros(r.food) }}</span>
+            </button>
+          </li>
+        }
+        @if (!loading()) {
+          <li class="muted small">Sources : mes aliments, CIQUAL (ANSES)</li>
+        }
+      } @else {
+        @if (!loading() && !error() && shownOnline().length === 0) {
+          <li class="muted small">{{ online().length ? 'Aucun produit brut dans les résultats.' : 'Aucun résultat sur Open Food Facts.' }}</li>
+        }
+        @for (r of shownOnline(); track r.food.id) {
+          <li>
+            <button mat-button type="button" (click)="picked.emit(offToFood(r))">
+              <span>
+                {{ r.food.name }} <span [class]="'badge tag ' + levels[r.level].cls">{{ levels[r.level].label }}</span>
+              </span>
+              <span class="muted small">{{ r.brand ? r.brand + ' · ' : '' }}{{ macros(r.food) }}</span>
+            </button>
+          </li>
+        }
+        @if (!loading()) {
+          <li class="muted small">Source : Open Food Facts</li>
+        }
+      }
+    </ul>
+  }
+</div>

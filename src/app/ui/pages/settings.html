@@ -1,0 +1,89 @@
+<h1>Réglages</h1>
+<mat-card appearance="outlined" class="card">
+  <h2>Objectifs</h2>
+  <form class="grid-form" (submit)="$event.preventDefault()">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Objectif calorique (kcal / jour)</mat-label>
+      <input matInput name="goal" inputmode="decimal" required [(ngModel)]="goal" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Poids cible (kg)</mat-label>
+      <input matInput name="target" inputmode="decimal" [(ngModel)]="target" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Taille (cm) — pour l'IMC</mat-label>
+      <input matInput name="height" inputmode="decimal" [(ngModel)]="height" />
+    </mat-form-field>
+    <div class="row span2">
+      <span class="muted small">Enregistrement automatique</span>
+      @if (saved()) {
+        <span class="good">Enregistré ✓</span>
+      }
+    </div>
+  </form>
+</mat-card>
+
+<mat-card appearance="outlined" class="card">
+  <h2>Objectifs de macros</h2>
+  <form class="grid-form" (submit)="$event.preventDefault()">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Protéines (g / jour)</mat-label>
+      <input matInput name="protein" inputmode="decimal" [(ngModel)]="protein" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Glucides (g / jour)</mat-label>
+      <input matInput name="carbs" inputmode="decimal" [(ngModel)]="carbs" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Lipides (g / jour)</mat-label>
+      <input matInput name="fat" inputmode="decimal" [(ngModel)]="fat" />
+    </mat-form-field>
+  </form>
+  <div class="row wrap">
+    <button mat-stroked-button [disabled]="!lastWeight() || !(goalValue() > 0)" (click)="suggest()">Proposer des valeurs</button>
+    <span class="muted small">
+      @if (lastWeight()) {
+        1,8 g de protéines par kg ({{ lastWeight() }} kg), 28 % de lipides, le reste en glucides. Laissez vide pour ne pas suivre un macro.
+      } @else {
+        Enregistrez une pesée pour obtenir une proposition. Laissez vide pour ne pas suivre un macro.
+      }
+    </span>
+  </div>
+</mat-card>
+
+<mat-card appearance="outlined" class="card">
+  <h2>Données</h2>
+  <p class="muted small">
+    Les données sont stockées dans ce navigateur et enregistrées automatiquement. Pour les protéger d'une perte (nettoyage du navigateur, changement d'appareil), activez la sauvegarde automatique ci-dessous ou exportez-les régulièrement.
+  </p>
+  @if (backup.supported) {
+    <div class="row wrap">
+      @if (!backup.folder()) {
+        <button mat-flat-button (click)="backup.choose()">Choisir un dossier de sauvegarde…</button>
+      } @else {
+        <span class="small">
+          Dossier : <strong>{{ backup.folder() }}</strong>
+          @if (backup.lastBackup(); as last) {
+            — dernière sauvegarde à {{ last.toLocaleTimeString('fr-FR') }}
+          }
+        </span>
+        @if (backup.needsPermission()) {
+          <button mat-flat-button (click)="backup.resume()">Réactiver la sauvegarde</button>
+        }
+        @if (backup.error()) {
+          <span class="danger small">Échec de la sauvegarde</span>
+        }
+        <button mat-stroked-button (click)="backup.choose()">Changer</button>
+        <button mat-stroked-button (click)="backup.disable()">Désactiver</button>
+      }
+    </div>
+  } @else {
+    <p class="muted small">La sauvegarde automatique dans un dossier n'est pas disponible sur ce navigateur (utilisez Chrome ou Edge). Pensez à exporter régulièrement.</p>
+  }
+  <div class="row wrap">
+    <button mat-flat-button (click)="exportData()">Exporter (JSON)</button>
+    <button mat-stroked-button (click)="file.click()">Importer…</button>
+    <input #file type="file" accept="application/json,.json" hidden (change)="importData($event)" />
+    <button mat-stroked-button class="danger" (click)="eraseAll()">Tout effacer</button>
+  </div>
+</mat-card>

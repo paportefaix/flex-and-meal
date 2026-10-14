@@ -1,0 +1,9 @@
+@if (geometry(); as g) {
+  <svg [attr.width]="g.w" [attr.height]="g.h" [attr.viewBox]="'0 0 ' + g.w + ' ' + g.h" role="img"
+       [attr.aria-label]="'Évolution de ' + trend().name + ' sur ' + g.count + ' séances'">
+    <polyline [attr.points]="g.points" fill="none" [style.stroke]="g.stroke" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+    <circle [attr.cx]="g.lastX" [attr.cy]="g.lastY" r="2.5" [style.fill]="g.stroke" />
+  </svg>
+} @else {
+  <span class="muted">–</span>
+}

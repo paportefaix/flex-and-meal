@@ -1,0 +1,14 @@
+<form class="picker" (ngSubmit)="submit()">
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <input matInput name="name" placeholder="Rechercher un aliment…" aria-label="Aliment" autocomplete="off"
+           [ngModel]="name()" (ngModelChange)="rename($event)" />
+  </mat-form-field>
+  <mat-form-field class="qty" appearance="outline" subscriptSizing="dynamic">
+    <input matInput name="qty" inputmode="decimal" [placeholder]="food()?.unit ?? 'qté'" aria-label="Quantité" autocomplete="off" [(ngModel)]="qty" />
+  </mat-form-field>
+  <span class="muted preview">{{ preview() }}</span>
+  <button mat-flat-button [disabled]="!valid()">Ajouter</button>
+</form>
+@if (!picked()) {
+  <app-food-search [query]="name()" (picked)="choose($event)" />
+}

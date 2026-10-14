@@ -1,0 +1,43 @@
+<mat-card appearance="outlined" class="card">
+  <h2>Poids</h2>
+  @if (last(); as l) {
+    <div class="stats">
+      <app-stat label="Actuel" [value]="round(l.weight, 1)" unit="kg" />
+      <app-stat label="Depuis le début" [value]="signed(l.weight - first()!.weight)" unit="kg" [tone]="l.weight > first()!.weight ? 'bad' : 'good'" />
+      @if (settings().targetWeight; as t) {
+        <app-stat label="Reste à perdre" [value]="round(max0(l.weight - t), 1)" unit="kg" />
+      }
+      @if (bmi(); as b) {
+        <app-stat label="IMC" [value]="round(b, 1)" unit="" />
+      }
+    </div>
+  }
+
+  <form class="picker" (submit)="$event.preventDefault(); save()">
+    <app-date-field [(value)]="date" [required]="true" label="Date de la pesée" />
+    <mat-form-field class="qty" appearance="outline" subscriptSizing="dynamic">
+      <input matInput name="weight" inputmode="decimal" placeholder="kg" aria-label="Poids en kg" autocomplete="off"
+             [(ngModel)]="weight" (blur)="save()" />
+    </mat-form-field>
+    <span class="muted small">Enregistré automatiquement</span>
+  </form>
+
+  @if (weights().length >= 2) {
+    <app-chart type="line" [data]="chart()" [look]="chartLook()" [height]="240" label="Évolution du poids" />
+  }
+
+  @if (weights().length > 0) {
+    <details>
+      <summary>Historique ({{ weights().length }})</summary>
+      <ul class="items">
+        @for (w of reversed(); track w.id) {
+          <li>
+            <span>{{ fmtShort(w.date) }}</span>
+            <span class="num">{{ w.weight }} kg</span>
+            <button mat-icon-button (click)="remove(w.id)" aria-label="Supprimer">×</button>
+          </li>
+        }
+      </ul>
+    </details>
+  }
+</mat-card>

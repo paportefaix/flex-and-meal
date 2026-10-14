@@ -1,0 +1,35 @@
+<mat-card appearance="outlined" class="card">
+  <div class="card-head">
+    <h2>Sport</h2>
+    <span class="badge">{{ round(totals().burned) }} kcal brûlées</span>
+  </div>
+  @if (totals().workouts.length > 0 || totals().strength.length > 0) {
+    <ul class="items">
+      @for (s of totals().strength; track s.id) {
+        <li>
+          <span>
+            Muscu · {{ s.title }}
+            <span class="muted small">({{ sets(s) }} séries, {{ round(volume(s)).toLocaleString('fr-FR') }} kg)</span>
+          </span>
+          <span class="muted">{{ round(minutes(s)) }} min</span>
+          <span class="num" title="Estimation : MET × poids × durée">~{{ round(kcal(s)) }} kcal</span>
+          <span></span>
+        </li>
+      }
+      @for (w of totals().workouts; track w.id) {
+        <li>
+          <span>
+            {{ w.activity }}
+            @if (w.distanceKm) {
+              <span class="muted small"> · {{ round(w.distanceKm, 1).toLocaleString('fr-FR') }} km</span>
+            }
+          </span>
+          <span class="muted">{{ w.duration }} min</span>
+          <span class="num">{{ round(w.kcal) }} kcal</span>
+          <button mat-icon-button (click)="removeWorkout(w.id)" [attr.aria-label]="'Retirer ' + w.activity">×</button>
+        </li>
+      }
+    </ul>
+  }
+  <app-cardio-form [date]="date()" />
+</mat-card>

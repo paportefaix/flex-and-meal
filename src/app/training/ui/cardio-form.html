@@ -1,0 +1,22 @@
+<form class="picker" (ngSubmit)="submit()">
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <input matInput name="activity" placeholder="Activité (course, vélo…)" aria-label="Activité" autocomplete="off"
+           [matAutocomplete]="auto" [(ngModel)]="activity" />
+    <mat-autocomplete #auto="matAutocomplete">
+      @for (a of activities(); track a) {
+        <mat-option [value]="a">{{ a }}</mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+  <mat-form-field class="qty" appearance="outline" subscriptSizing="dynamic">
+    <input matInput name="duration" inputmode="decimal" placeholder="min" aria-label="Durée en minutes" [(ngModel)]="duration" />
+  </mat-form-field>
+  <mat-form-field class="qty" appearance="outline" subscriptSizing="dynamic">
+    <input matInput name="distance" inputmode="decimal" placeholder="km" aria-label="Distance en kilomètres" [(ngModel)]="distance" />
+  </mat-form-field>
+  <mat-form-field class="qty" appearance="outline" subscriptSizing="dynamic">
+    <input matInput name="kcal" inputmode="decimal" [placeholder]="estimate() ? '~' + estimate() : 'kcal'" aria-label="Calories brûlées"
+           [title]="estimate() ? 'Estimation automatique si vous laissez vide' : ''" [(ngModel)]="kcal" />
+  </mat-form-field>
+  <button mat-flat-button>Ajouter</button>
+</form>

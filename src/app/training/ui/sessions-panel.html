@@ -1,0 +1,126 @@
+<mat-card appearance="outlined" class="card">
+  <div class="card-head">
+    <h2 class="capitalize">{{ monthLabel() }}</h2>
+    <div class="row">
+      <button mat-stroked-button (click)="shiftMonth(-1)" aria-label="Mois précédent">‹</button>
+      <button mat-stroked-button (click)="shiftMonth(1)" aria-label="Mois suivant" [disabled]="monthValue() >= currentMonth()">›</button>
+    </div>
+  </div>
+  <div class="cal">
+    @for (d of weekdays; track $index) {
+      <span class="cal-dow">{{ d }}</span>
+    }
+    @for (e of blanks(); track e) {
+      <span></span>
+    }
+    @for (c of cells(); track c.date) {
+      @if (c.kind) {
+        <button class="cal-day" [class]="'cal-day ' + c.kind + (c.date === today() ? ' today' : '') + (c.date === selected() ? ' sel' : '')"
+                [attr.aria-pressed]="c.date === selected()" [attr.aria-label]="fmtDate(c.date) + ' : ' + c.label"
+                (click)="selected.set(c.date === selected() ? null : c.date)">
+          <span>{{ c.day }}</span>
+          <span class="cal-tag">{{ c.label }}</span>
+        </button>
+      } @else {
+        <div [class]="'cal-day' + (c.date === today() ? ' today' : '')"><span>{{ c.day }}</span></div>
+      }
+    }
+  </div>
+  <div class="legend small">
+    <span><i class="cell cal-lift"></i>Musculation</span>
+    <span><i class="cell cal-cardio"></i>Cardio</span>
+  </div>
+</mat-card>
+
+<mat-card appearance="outlined" class="card">
+  <div class="card-head">
+    <h2>Séances</h2>
+    @if (selected(); as sel) {
+      <button mat-stroked-button (click)="selected.set(null)">{{ fmtDate(sel, { day: 'numeric', month: 'short' }) }} · tout afficher</button>
+    } @else {
+      <span class="muted small">{{ list().length }} séance{{ list().length > 1 ? 's' : '' }}</span>
+    }
+  </div>
+  @if (!selected() && muscles().length > 1) {
+    <div class="chips" role="group" aria-label="Filtrer par muscle">
+      @for (g of filters(); track g ?? 'all') {
+        @if (filter() === g) {
+          <button mat-flat-button aria-pressed="true">{{ g ?? 'Tous' }}</button>
+        } @else {
+          <button mat-stroked-button aria-pressed="false" (click)="setFilter(g)">{{ g ?? 'Tous' }}</button>
+        }
+      }
+    </div>
+  }
+  @if (selectedCardio().length > 0) {
+    <ul class="items">
+      @for (w of selectedCardio(); track w.id) {
+        <li>
+          <span>{{ w.activity }} <span class="badge tag unknown">cardio</span></span>
+          <span class="muted">{{ w.duration }} min{{ w.distanceKm ? ' · ' + fr(w.distanceKm) + ' km' : '' }}</span>
+          <span class="num">{{ round(w.kcal) }} kcal</span>
+        </li>
+      }
+    </ul>
+  }
+  @for (s of visible(); track s.id; let i = $index) {
+    <details class="sess" [open]="i === 0 && !filter()">
+      <summary>
+        <span class="sess-main">
+          <strong>{{ s.title }}</strong>
+          @if (infos().get(s.id)?.pr) {
+            <span class="badge tag raw">PR</span>
+          }
+          <span class="muted small capitalize">
+            {{ fmtDate(s.date, { weekday: 'short', day: 'numeric', month: 'short' }) }} · {{ sets(s) }} séries{{ s.minutes ? ' · ' + fmtDuration(s.minutes) : '' }}
+          </span>
+          <span class="chips">
+            @for (g of infos().get(s.id)?.muscles ?? []; track g) {
+              <span class="chip">{{ g }}</span>
+            }
+          </span>
+        </span>
+        <span class="sess-vol num">
+          <strong>{{ tonnes(volume(s)) }} t</strong>
+          <span class="muted small">volume</span>
+        </span>
+      </summary>
+      @for (e of s.exercises; track $index; let j = $index) {
+        <div class="sess-ex">
+          <div class="exrow">
+            <strong class="small">{{ e.name }}</strong>
+            @if (deltaText(infos().get(s.id)?.deltas?.[j]); as dt) {
+              <span class="small num" [class]="'small num ' + dt.tone" [title]="dt.title">{{ dt.text }}</span>
+            }
+          </div>
+          <div class="scroll-x">
+            <table class="plain">
+              <tbody>
+                @for (x of e.sets; track $index; let k = $index) {
+                  <tr [class]="x.type === 'warmup' ? 'muted' : ''">
+                    <td style="width: 2.5rem">{{ x.type === 'warmup' ? 'É' : workIndex(e.sets, k) }}</td>
+                    <td class="num">{{ x.weight ? round(x.weight, 1) + ' kg' : 'PDC' }}</td>
+                    <td class="num">{{ x.reps ? '× ' + x.reps : (x.seconds ?? 0) + ' s' }}</td>
+                    <td class="num hide-sm">{{ x.rpe ? 'RPE ' + x.rpe : '' }}</td>
+                    <td class="num">{{ x.type !== 'warmup' && x.weight ? '1RM ≈ ' + round(e1rm(x.weight, x.reps)) + ' kg' : '' }}</td>
+                    <td class="num hide-sm">{{ x.type !== 'warmup' ? round(setVol(x)) + ' kg' : '' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (noWorkSets(e)) {
+            <span class="muted small">Aucune série de travail</span>
+          }
+        </div>
+      }
+    </details>
+  }
+  @if (!visible().length && !selectedCardio().length) {
+    <p class="muted small">Aucune séance.</p>
+  }
+  @if (!selected() && list().length > shown()) {
+    <button mat-stroked-button (click)="shown.set(shown() + page)">Voir {{ Math.min(page, list().length - shown()) }} séances de plus</button>
+  }
+  <p class="muted small">▲ ▼ : variation du meilleur 1RM estimé (ou des répétitions au poids du corps) par rapport à la séance précédente du même exercice. PR : record de 1RM estimé battu pendant la séance.</p>
+</mat-card>

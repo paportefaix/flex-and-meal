@@ -1,0 +1,32 @@
+@if (groups().length) {
+  <mat-card appearance="outlined" class="card">
+    <div class="card-head">
+      <h2>Séries par muscle et par semaine</h2>
+      <span class="muted small">{{ weeks() }} dernières semaines</span>
+    </div>
+    <div class="scroll-x">
+      <div class="mheat" [style.grid-template-columns]="'5.5rem repeat(' + weeks() + ', minmax(1.6rem, 1fr)) 3rem'">
+        <span></span>
+        @for (w of load(); track w.week) {
+          <span class="mheat-col">{{ fmtShort(w.week) }}</span>
+        }
+        <span class="mheat-col" style="text-align: right">/ sem.</span>
+        @for (g of groups(); track g) {
+          <span class="small">{{ g }}</span>
+          @for (w of load(); track w.week) {
+            <span class="mheat-cell" [title]="g + ', semaine du ' + fmtShort(w.week) + ' : ' + w.sets[g] + ' série' + (w.sets[g] > 1 ? 's' : '')"
+                  [style.background]="heat(w.sets[g], max())" [style.color]="w.sets[g] / max() > 0.55 ? 'var(--accent-text)' : null">{{ w.sets[g] || '' }}</span>
+          }
+          <span class="small muted num" style="text-align: right">{{ fr(total(g) / weeks()) }}</span>
+        }
+      </div>
+    </div>
+    <div class="legend small">
+      <span>moins</span>
+      @for (s of shades; track s) {
+        <i class="cell" [style.background]="heat(s * max(), max())" style="margin-right: 0"></i>
+      }
+      <span>plus de séries</span>
+    </div>
+  </mat-card>
+}

@@ -1,0 +1,57 @@
+<h1>Repas types</h1>
+
+@if (draft(); as d) {
+  <mat-card appearance="outlined" class="card">
+    <h2>{{ isExisting() ? 'Modifier le repas type' : 'Nouveau repas type' }}</h2>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <input matInput name="name" placeholder="Nom (ex. Petit-déj classique)" aria-label="Nom" autocomplete="off"
+             [ngModel]="d.name" (ngModelChange)="rename($event)" />
+    </mat-form-field>
+    <ul class="items">
+      @for (p of d.items; track $index; let idx = $index) {
+        @if (foodOf(p); as food) {
+          <li>
+            <span>{{ food.name }}</span>
+            <span class="row">
+              <mat-form-field class="qty" appearance="outline" subscriptSizing="dynamic">
+                <input matInput inputmode="decimal" [attr.aria-label]="'Quantité ' + food.name" [value]="p.quantity" (input)="setQuantity(idx, $any($event.target).value)" />
+              </mat-form-field>
+              <span class="muted">{{ food.unit }}</span>
+            </span>
+            <span class="num">{{ round(kcalOf(food, p.quantity)) }} kcal</span>
+            <button mat-icon-button (click)="removeItem(idx)" [attr.aria-label]="'Retirer ' + food.name">×</button>
+          </li>
+        }
+      }
+    </ul>
+    <app-food-picker (add)="addItem($event.food, $event.quantity)" />
+    <div class="card-head">
+      <strong>Total : {{ round(total().kcal) }} kcal</strong>
+      <span class="row">
+        <button mat-stroked-button (click)="draft.set(null)">Annuler</button>
+        <button mat-flat-button (click)="save()" [disabled]="!d.name.trim() || d.items.length === 0">Enregistrer</button>
+      </span>
+    </div>
+  </mat-card>
+} @else {
+  <button mat-flat-button (click)="draft.set({ id: newId(), name: '', items: [] })">+ Nouveau repas type</button>
+}
+
+@if (data().templates.length === 0 && !draft()) {
+  <p class="muted">Aucun repas type pour l'instant. Créez-en un ici, ou enregistrez un repas depuis le journal.</p>
+}
+
+@for (t of data().templates; track t.id) {
+  <mat-card appearance="outlined" class="card">
+    <div class="card-head">
+      <h2>{{ t.name }}</h2>
+      <span class="badge">{{ round(nutrients(t).kcal) }} kcal</span>
+    </div>
+    <p class="muted small">{{ summary(t) }}</p>
+    <p class="muted small">P {{ round(nutrients(t).protein) }} g · G {{ round(nutrients(t).carbs) }} g · L {{ round(nutrients(t).fat) }} g</p>
+    <div class="row">
+      <button mat-stroked-button (click)="draft.set(clone(t))">Modifier</button>
+      <button mat-stroked-button class="danger" (click)="remove(t)">Supprimer</button>
+    </div>
+  </mat-card>
+}

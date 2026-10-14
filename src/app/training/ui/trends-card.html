@@ -1,0 +1,59 @@
+<mat-card appearance="outlined" class="card">
+  <div class="card-head">
+    <h2>Tendance par exercice</h2>
+    @if (selectable()) {
+      <span class="muted small">Touchez une ligne pour voir sa courbe</span>
+    }
+    <app-segmented [options]="filters" label="Filtre" [value]="filter()" (valueChange)="setFilter($event)" />
+  </div>
+  <div class="stats">
+    <app-stat label="En hausse" [value]="count('up')" unit="" [tone]="count('up') ? 'good' : undefined" />
+    <app-stat label="Stables" [value]="count('flat') + count('new')" unit="" />
+    <app-stat label="Plateaux" [value]="count('plateau')" unit="" />
+    <app-stat label="En baisse" [value]="count('down')" unit="" [tone]="count('down') ? 'bad' : undefined" />
+  </div>
+  @if (shown().length) {
+    <div class="scroll-x">
+      <table class="plain">
+        <thead>
+          <tr>
+            <th>Exercice</th>
+            <th>Courbe</th>
+            <th class="num">Actuel</th>
+            <th class="num">4 sem.</th>
+            <th class="num hide-sm">12 sem.</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of shown(); track t.name) {
+            <tr [class]="selectable() ? 'clickable' + (selected() === t.name ? ' selected' : '') : ''"
+                [attr.tabindex]="selectable() ? 0 : null" [attr.aria-label]="selectable() ? 'Voir la progression de ' + t.name : null"
+                (click)="selectable() && picked.emit(t.name)" (keydown.enter)="selectable() && picked.emit(t.name)">
+              <td>
+                {{ t.name }}
+                <div class="muted small">{{ detail(t) }}</div>
+              </td>
+              <td><app-sparkline [trend]="t" /></td>
+              <td class="num">{{ t.unit === 'kg' ? fr(t.current) + ' kg' : t.current + ' rép.' }}</td>
+              <td [class]="'num ' + deltaTone(t.delta4)">{{ pct(t.delta4) }}</td>
+              <td [class]="'num hide-sm ' + deltaTone(t.delta12)">{{ pct(t.delta12) }}</td>
+              <td><span [class]="'badge tag ' + status[t.status].badge">{{ status[t.status].label }}</span></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="muted small">{{ filter() === 'watch' ? 'Aucun plateau ni baisse détectés : bon signe.' : 'Aucun exercice à afficher.' }}</p>
+  }
+  @if (list().length > collapsedRows) {
+    <button mat-stroked-button style="margin-top: 0.5rem" (click)="expanded.set(!expanded())">
+      {{ expanded() ? 'Réduire' : 'Voir les ' + (list().length - collapsedRows) + ' autres' }}
+    </button>
+  }
+  <p class="muted small">
+    Suivi du meilleur 1RM estimé par séance (répétitions pour les exercices au poids du corps), comparé à la séance connue il y a 4 et 12 semaines. Plateau :
+    au moins 4 séances et 3 semaines sans battre le meilleur résultat. Inactif : pas refait depuis plus de 5 semaines. Au moins 3 séances sont nécessaires pour juger une tendance.
+  </p>
+</mat-card>

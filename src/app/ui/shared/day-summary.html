@@ -1,0 +1,30 @@
+<div class="summary">
+  <div class="stats">
+    <app-stat label="Consommées" [value]="round(intake().kcal)" />
+    <app-stat label="Sport" [value]="burned() ? '−' + round(burned()) : 0" />
+    <app-stat label="Objectif" [value]="goal()" />
+    <app-stat [label]="over() ? 'Dépassement' : 'Restantes'" [value]="round(abs(remaining()))" [tone]="over() ? 'bad' : 'good'" />
+  </div>
+  <div class="bar" [attr.aria-label]="round(pct()) + ' % du budget'">
+    <div [class]="over() ? 'fill over' : 'fill'" [style.width.%]="pct()"></div>
+  </div>
+  @if (showMacroBars()) {
+    <div class="macro-bars">
+      @for (m of macros; track m.key) {
+        <div class="macro-bar">
+          <div class="macro-bar-head small">
+            <span>{{ m.label }}</span>
+            <span class="muted">{{ round(intake()[m.key]) }}{{ target(m.goalKey) ? ' / ' + target(m.goalKey) : '' }} g</span>
+          </div>
+          <div class="bar" [attr.aria-label]="macroLabel(m)">
+            <div class="fill" [style.width.%]="macroPct(m.key, m.goalKey)" [style.background]="m.color"></div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="macros muted">
+      Protéines {{ round(intake().protein) }} g · Glucides {{ round(intake().carbs) }} g · Lipides {{ round(intake().fat) }} g
+    </div>
+  }
+</div>

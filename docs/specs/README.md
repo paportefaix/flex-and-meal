@@ -13,5 +13,5 @@ Living specification of Flex & Meal's behaviour, written in Gherkin. It is deriv
 
 Conventions
 - `Rule:` groups scenarios around one business rule; `@tags` at the top of each file name the bounded context (see `ARCHITECTURE.md`).
-- Scenarios describe observable behaviour, not implementation. Pure-domain scenarios map to the existing Vitest tests (`*.test.ts`); UI scenarios are not automated yet.
+- Scenarios describe observable behaviour, not implementation. Pure-domain scenarios map to the existing Vitest tests (`*.spec.ts`); UI scenarios are not automated yet.
 - Backlog items from `IMPROVEMENTS.md` (PWA, weight trend, adaptive TDEE, …) are intentionally not specified until they are built.

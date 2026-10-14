@@ -1,0 +1,14 @@
+@if (open()) {
+  <form class="row" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <input matInput name="name" placeholder="Plat" aria-label="Plat" autocomplete="off" [(ngModel)]="name" />
+    </mat-form-field>
+    <mat-form-field class="qty" appearance="outline" subscriptSizing="dynamic">
+      <input matInput name="kcal" inputmode="decimal" placeholder="kcal" aria-label="Calories" autocomplete="off" [(ngModel)]="kcal" />
+    </mat-form-field>
+    <button mat-flat-button>OK</button>
+    <button mat-stroked-button type="button" (click)="open.set(false)">Annuler</button>
+  </form>
+} @else {
+  <button mat-stroked-button (click)="open.set(true)">+ Saisie libre</button>
+}

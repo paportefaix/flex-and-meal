@@ -1,0 +1,17 @@
+<mat-card appearance="outlined" class="card">
+  <h2>Ajouter une séance Hevy</h2>
+  <form (ngSubmit)="sync()">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <textarea matInput name="links" rows="2" placeholder="https://hevy.com/workout/…  (un lien par ligne)" aria-label="Liens de séances Hevy" [(ngModel)]="text"></textarea>
+    </mat-form-field>
+    <div class="row wrap">
+      <button mat-flat-button [disabled]="busy() || !ids().length">
+        {{ busy() ? 'Synchronisation…' : ids().length > 1 ? 'Synchroniser ' + ids().length + ' séances' : 'Synchroniser la séance' }}
+      </button>
+    </div>
+  </form>
+  @for (m of messages(); track $index) {
+    <p [class]="'small ' + (m.error ? 'bad' : 'good')">{{ m.text }}</p>
+  }
+  <p class="muted small">Dans Hevy, ouvrez la séance, touchez Partager et copiez le lien. Recoller une séance déjà présente la met à jour sans la dupliquer.</p>
+</mat-card>

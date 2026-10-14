@@ -1,0 +1,12 @@
+<form (ngSubmit)="ref.close(value())">
+  <div mat-dialog-content>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ label }}</mat-label>
+      <input #field matInput name="value" [(ngModel)]="value" autocomplete="off" />
+    </mat-form-field>
+  </div>
+  <div mat-dialog-actions align="end">
+    <button mat-button type="button" [mat-dialog-close]="null">Annuler</button>
+    <button mat-flat-button type="submit">OK</button>
+  </div>
+</form>

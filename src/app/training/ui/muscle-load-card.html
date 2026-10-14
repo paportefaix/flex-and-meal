@@ -1,0 +1,52 @@
+<mat-card appearance="outlined" class="card">
+  <div class="card-head">
+    <h2>Charge par muscle</h2>
+    <app-segmented [options]="metrics" label="Unité" [(value)]="metric" />
+  </div>
+  @if (groups().length) {
+    <app-chart [data]="stacked()" [look]="{ legend: true, stacked: true, unit: metric() === 'sets' ? 'séries' : 'kg', titlePrefix: 'Semaine du ' }" [height]="230" label="Charge par muscle et par semaine" />
+  } @else {
+    <p class="muted small">Aucune série sur la période.</p>
+  }
+
+  @if (rows().length > 0) {
+    <div class="scroll-x">
+      <table class="plain">
+        <thead>
+          <tr>
+            <th>Muscle</th>
+            <th class="num">Séries / sem.</th>
+            <th class="num">Dures / sem.</th>
+            <th class="num">Fréquence</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track r.group) {
+            <tr>
+              <td><i class="cell" style="display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px" [style.background]="colors[r.group]"></i>{{ r.group }}</td>
+              <td class="num">{{ fr(r.setsPerWeek) }}</td>
+              <td class="num">{{ rated() ? fr(r.hardPerWeek) : '–' }}</td>
+              <td class="num">{{ fr(r.perWeek) }} × / sem.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  <p class="muted small">
+    Fréquence : nombre de jours distincts où le muscle est travaillé, par semaine (environ 2 est une recommandation courante). Groupe déduit du nom de l'exercice.
+  </p>
+
+  <h2 style="margin-top: 1rem">Séries dures par semaine</h2>
+  @if (rated() > 0) {
+    <app-chart [data]="hardData()" [look]="{ legend: true, stacked: true, titlePrefix: 'Semaine du ' }" [height]="180" label="Séries dures par semaine" />
+    <p class="muted small">
+      {{ hard() }} série{{ hard() > 1 ? 's' : '' }} dure{{ hard() > 1 ? 's' : '' }} sur {{ total() }} ({{ total() ? round((hard() / total()) * 100) : 0 }} %). Une série dure est menée à l'échec ou notée RPE 8 et plus.
+      @if (rated() < total() * 0.5) {
+        Moins de la moitié de tes séries ont un RPE : le chiffre sous-estime probablement la réalité.
+      }
+    </p>
+  } @else {
+    <p class="muted small">Aucun RPE ni série à l'échec dans tes séances. Renseigne le RPE dans Hevy pour suivre les séries dures.</p>
+  }
+</mat-card>

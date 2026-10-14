@@ -1,0 +1,33 @@
+<div class="body-diagram">
+  <svg viewBox="0 0 200 410" role="img" aria-label="Schéma d'un homme montrant où prendre chaque mensuration">
+    <defs>
+      <g id="body-half">
+        <path [attr.d]="half" />
+        <path [attr.d]="arm" />
+      </g>
+    </defs>
+    <g fill="var(--border)" stroke="var(--muted)" stroke-width="1.2" stroke-linejoin="round">
+      <circle cx="100" cy="28" r="17" />
+      <use href="#body-half" />
+      <use href="#body-half" transform="translate(200,0) scale(-1,1)" />
+    </g>
+    @for (s of sites; track s.key; let i = $index) {
+      <g [attr.opacity]="active() && active() !== s.key ? 0.35 : 1">
+        <line [attr.x1]="s.x1" [attr.x2]="s.x2" [attr.y1]="s.y" [attr.y2]="s.y"
+              [attr.stroke]="active() === s.key ? 'var(--accent)' : 'var(--text)'"
+              [attr.stroke-width]="active() === s.key ? 2.2 : 1.4" stroke-dasharray="4 2" />
+        <polyline [attr.points]="s.x2 + ',' + s.y + ' 160,' + s.labelY" fill="none"
+                  [attr.stroke]="active() === s.key ? 'var(--accent)' : 'var(--text)'" stroke-width="0.7" />
+        <circle cx="168" [attr.cy]="s.labelY" r="8" [attr.fill]="active() === s.key ? 'var(--accent)' : 'var(--surface)'"
+                [attr.stroke]="active() === s.key ? 'var(--accent)' : 'var(--text)'" stroke-width="1" />
+        <text x="168" [attr.y]="s.labelY" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="600"
+              [attr.fill]="active() === s.key ? 'var(--accent-text)' : 'var(--text)'">{{ i + 1 }}</text>
+      </g>
+    }
+  </svg>
+  <ol class="body-diagram-list">
+    @for (s of sites; track s.key) {
+      <li [class.on]="active() === s.key"><strong>{{ labels[s.key] }}</strong> — {{ s.help }}</li>
+    }
+  </ol>
+</div>

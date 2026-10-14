@@ -1,0 +1,57 @@
+<mat-card appearance="outlined" class="card">
+  <div class="card-head">
+    <h2>Carte musculaire</h2>
+    <span class="muted small">séries / semaine</span>
+  </div>
+  @if (rows().length) {
+    <div class="bodymap">
+      <div class="bodymap-figs">
+        @for (fig of figures; track fig.caption) {
+          <div>
+            <svg class="bodymap-fig" viewBox="0 0 200 330" role="img" [attr.aria-label]="fig.label">
+              <g class="bodymap-outline">
+                <circle cx="100" cy="30" r="16" />
+                <path d="M60 66 Q100 52 140 66 L150 190 L130 320 L70 320 L50 190Z" />
+                <rect x="33" y="88" width="22" height="90" rx="10" />
+                <rect x="145" y="88" width="22" height="90" rx="10" />
+              </g>
+              @for (zone of fig.zones; track zone[0]) {
+                <g class="bodymap-zone" [style.fill]="heat(perWeek(zone[0]), 18)">
+                  <title>{{ zone[0] }} : {{ fr(perWeek(zone[0])) }} séries / sem.</title>
+                  @for (s of zone[1]; track $index) {
+                    @if (asPath(s); as p) {
+                      <path [attr.d]="p" />
+                    } @else if (asCircle(s); as c) {
+                      <circle [attr.cx]="c[0]" [attr.cy]="c[1]" [attr.r]="c[2]" />
+                    } @else if (asRect(s); as r) {
+                      <rect [attr.x]="r[0]" [attr.y]="r[1]" [attr.width]="r[2]" [attr.height]="r[3]" [attr.rx]="r[4]" />
+                    }
+                  }
+                </g>
+              }
+            </svg>
+            <div class="small muted bodymap-cap">{{ fig.caption }}</div>
+          </div>
+        }
+      </div>
+      <div class="bodymap-rows">
+        @for (r of rows(); track r.group) {
+          <div class="mrow">
+            <span class="small"><i class="dot" [style.background]="colors[r.group]"></i>{{ r.group }}</span>
+            <div class="track" aria-hidden="true">
+              <div class="band" [style.left.%]="(range[0] / max()) * 100" [style.width.%]="((range[1] - range[0]) / max()) * 100"></div>
+              <div class="fill" [style.width.%]="Math.min(r.setsPerWeek / max(), 1) * 100"></div>
+            </div>
+            <span class="small num mrow-val">{{ fr(r.setsPerWeek) }} <span [class]="tone(r.setsPerWeek)">{{ state(r.setsPerWeek) }}</span></span>
+          </div>
+        }
+      </div>
+    </div>
+  } @else {
+    <p class="muted small">Aucune série sur la période.</p>
+  }
+  <p class="muted small">
+    La zone verte sur chaque barre est la fourchette courante de {{ range[0] }} à {{ range[1] }} séries par groupe et par semaine en hypertrophie. Silhouette schématique ; le groupe est déduit du
+    nom de l'exercice.
+  </p>
+</mat-card>

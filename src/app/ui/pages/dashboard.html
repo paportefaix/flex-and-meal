@@ -1,0 +1,60 @@
+<h1 class="capitalize">{{ title }}</h1>
+
+<mat-card appearance="outlined" class="card">
+  <div class="card-head">
+    <h2>Aujourd'hui</h2>
+    <a routerLink="/journal">Ouvrir le journal →</a>
+  </div>
+  <app-day-summary [intake]="totals().intake" [burned]="totals().burned" [goal]="goal()" [settings]="data().settings" />
+</mat-card>
+
+<mat-card appearance="outlined" class="card">
+  <div class="card-head">
+    <h2>7 derniers jours</h2>
+    <a routerLink="/semaine">Détail →</a>
+  </div>
+  <div class="stats">
+    <app-stat label="Moyenne / jour" [value]="round(avg7())" />
+    <app-stat label="Séances de sport" [value]="sessions7()" unit="" />
+  </div>
+  <app-chart [data]="kcalChart()" [look]="{ unit: 'kcal' }" [height]="180" label="Calories des 7 derniers jours" />
+</mat-card>
+
+<mat-card appearance="outlined" class="card">
+  <div class="card-head">
+    <h2>Musculation</h2>
+    <a routerLink="/muscu">Détail →</a>
+  </div>
+  @if (lastSession(); as s) {
+    <div class="stats">
+      <app-stat label="Séances cette semaine" [value]="thisWeek().sessions" unit="" />
+      <app-stat label="Volume cette semaine" [value]="round(thisWeek().volume / 1000, 1)" unit="t" />
+      <app-stat [label]="'Dernière séance (' + fmtShort(s.date) + ')'" [value]="round(volume(s)).toLocaleString('fr-FR')" [unit]="'kg · ' + sets(s) + ' séries'" />
+    </div>
+  } @else {
+    <p class="muted">Aucune séance importée. <a routerLink="/muscu">Importer l'export Hevy</a></p>
+  }
+</mat-card>
+
+<mat-card appearance="outlined" class="card">
+  <div class="card-head">
+    <h2>Poids</h2>
+    <a routerLink="/corps">Saisir →</a>
+  </div>
+  @if (lastWeight(); as last) {
+    <div class="stats">
+      <app-stat [label]="'Dernière pesée (' + fmtShort(last.date) + ')'" [value]="round(last.weight, 1)" unit="kg" />
+      @if (monthAgo(); as m) {
+        <app-stat label="Sur 30 jours" [value]="signed(last.weight - m.weight)" unit="kg" [tone]="last.weight > m.weight ? 'bad' : 'good'" />
+      }
+      @if (data().settings.targetWeight; as t) {
+        <app-stat label="Objectif" [value]="t" unit="kg" />
+      }
+    </div>
+    @if (recentWeights().length >= 2) {
+      <app-chart type="line" [data]="weightChart()" [look]="{ unit: 'kg', tight: true }" [height]="160" label="Évolution du poids" />
+    }
+  } @else {
+    <p class="muted">Aucune pesée enregistrée.</p>
+  }
+</mat-card>

@@ -1,0 +1,178 @@
+<input #fileInput type="file" accept=".csv,text/csv" hidden (change)="onFile($event)" />
+
+@if (!all().length) {
+  <h1>Musculation</h1>
+  <mat-card appearance="outlined" class="card">
+    <h2>Importer vos séances Hevy</h2>
+    <p class="small muted">
+      Dans Hevy : Profil → Réglages → Exporter les données, puis choisissez le fichier .csv ici. Vous pouvez réimporter un nouvel export à tout
+      moment : les séances déjà présentes ne sont pas dupliquées.
+    </p>
+    <div class="row"><button mat-flat-button (click)="fileInput.click()">Importer le CSV Hevy</button></div>
+    @if (message(); as m) {
+      <p [class]="'small ' + (m.error ? 'bad' : 'good')">{{ m.text }}</p>
+    }
+  </mat-card>
+  <app-hevy-link-card />
+} @else {
+  <div class="card-head">
+    <h1>Musculation</h1>
+    <div class="row"><button mat-flat-button (click)="fileInput.click()">Importer le CSV Hevy</button></div>
+  </div>
+  @if (message(); as m) {
+    <p [class]="'small ' + (m.error ? 'bad' : 'good')">{{ m.text }}</p>
+  }
+
+  <app-week-banner [sessions]="all()" [today]="today" />
+
+  <ng-template #periodPicker>
+    <div style="margin-bottom: 1rem"><app-segmented [options]="periods" label="Période" [(value)]="weeks" /></div>
+  </ng-template>
+
+  <mat-tab-group [selectedIndex]="tabIndex()" (selectedIndexChange)="setTab($event)" animationDuration="0ms" aria-label="Sections">
+    <mat-tab label="Aperçu">
+      <ng-template matTabContent>
+        <ng-container *ngTemplateOutlet="periodPicker" />
+        <mat-card appearance="outlined" class="card">
+          <div class="stats">
+            <app-stat label="Séances" [value]="period().length" [unit]="fr(period().length / weeks(), 1) + ' / sem.'" />
+            <app-stat label="Volume total" [value]="tonnes(volume())" unit="t" />
+            @if (volumeDelta() !== null) {
+              <app-stat label="Vs période précédente" [value]="signed(volumeDelta()!, 0)" unit="%" [tone]="volumeDelta()! >= 0 ? 'good' : 'bad'" />
+            }
+            <app-stat label="Séries de travail" [value]="sets()" unit="" />
+            <app-stat label="Reps / série" [value]="sets() ? fr(reps() / sets()) : 0" unit="" />
+            <app-stat label="Charge moyenne" [value]="reps() ? fr(volume() / reps()) : 0" unit="kg / rep" />
+            @if (timed().length > 0) {
+              <app-stat label="Durée moyenne" [value]="fmtDuration(minutes() / timed().length)" unit="" />
+            }
+            @if (minutes() > 0) {
+              <app-stat label="Densité" [value]="round(timedVolume() / minutes())" unit="kg / min" />
+            }
+          </div>
+        </mat-card>
+
+        <mat-card appearance="outlined" class="card">
+          <div class="card-head">
+            <h2>Volume par semaine</h2>
+            <app-segmented [options]="volumeByOptions" label="Détail du volume" [(value)]="volumeBy" />
+          </div>
+          <app-chart [data]="volumeChart()" [look]="{ legend: volumeBy() === 'muscle', stacked: volumeBy() === 'muscle', unit: 'kg', titlePrefix: 'Semaine du ' }"
+                     [height]="volumeBy() === 'muscle' ? 230 : 200" label="Volume par semaine" />
+        </mat-card>
+
+        <app-muscle-heatmap [sessions]="all()" [today]="today" />
+        <app-consistency-card [sessions]="all()" [today]="today" />
+      </ng-template>
+    </mat-tab>
+
+    <mat-tab label="Progression">
+      <ng-template matTabContent>
+        <mat-card appearance="outlined" class="card" #detail>
+          <div class="card-head">
+            <h2>Progression</h2>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width: auto; max-width: 60%">
+              <select matNativeControl aria-label="Exercice" (change)="exercise.set($any($event.target).value)">
+                @for (n of names(); track n) {
+                  <option [value]="n" [selected]="n === selected()">{{ n }}</option>
+                }
+              </select>
+            </mat-form-field>
+          </div>
+          @if (last(); as l) {
+            <div class="stats">
+              @if (!bodyweightOnly()) {
+                <app-stat label="1RM estimé actuel" [value]="round(l.e1rm, 1)" unit="kg" />
+                <app-stat label="Charge max" [value]="round(l.maxWeight, 1)" unit="kg" />
+              }
+              @if (gain() !== null && history().length > 1) {
+                <app-stat label="Évolution du 1RM" [value]="signed(gain()!)" unit="%" [tone]="gain()! >= 0 ? 'good' : 'bad'" />
+              }
+              <app-stat label="Séances" [value]="history().length" unit="" />
+            </div>
+          }
+          @if (history().length >= 2) {
+            <app-chart type="line" [data]="progressChart()" [look]="progressLook()" [height]="220" label="Progression de l'exercice" />
+            @if (!bodyweightOnly()) {
+              <p class="muted small">★ : nouveau record de 1RM estimé.</p>
+            }
+          } @else {
+            <p class="muted small">Au moins deux séances sont nécessaires pour tracer une courbe.</p>
+          }
+        </mat-card>
+
+        <app-trends-card [sessions]="all()" [today]="today" [selected]="selected()" [selectable]="true" (picked)="selectExercise($event)" />
+
+        <mat-card appearance="outlined" class="card">
+          <h2>Records personnels</h2>
+          <div class="scroll-x">
+            <table class="plain">
+              <thead>
+                <tr>
+                  <th>Exercice</th>
+                  <th class="num">Charge max</th>
+                  <th class="num">1RM estimé</th>
+                  <th class="num hide-sm">Meilleure série</th>
+                  <th class="num hide-sm">Séries</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of recs(); track r.name) {
+                  <tr [class]="'clickable' + (selected() === r.name ? ' selected' : '')" tabindex="0" [attr.aria-label]="'Voir la progression de ' + r.name"
+                      (click)="selectExercise(r.name)" (keydown.enter)="selectExercise(r.name)">
+                    <td>{{ r.name }}@if (r.best1RMDate >= newRecordSince) {<span class="badge tag raw">PR</span>}</td>
+                    <td class="num">{{ r.maxWeight ? round(r.maxWeight, 1) + ' kg' : 'PDC' }}</td>
+                    <td class="num">{{ r.best1RM ? round(r.best1RM, 1) + ' kg' : '–' }}</td>
+                    <td class="num hide-sm">{{ round(r.bestSet) }} kg</td>
+                    <td class="num hide-sm">{{ r.sets }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="muted small">PR : nouveau record de 1RM estimé ces 14 derniers jours. PDC : poids du corps. 1RM estimé = charge × (1 + reps / 30).</p>
+        </mat-card>
+
+        <app-cross-card [data]="data()" [today]="today" />
+      </ng-template>
+    </mat-tab>
+
+    <mat-tab label="Muscles">
+      <ng-template matTabContent>
+        <ng-container *ngTemplateOutlet="periodPicker" />
+        <app-muscle-map [period]="period()" [weeks]="weeks()" />
+
+        @if (zonesTotal() > 0) {
+          <mat-card appearance="outlined" class="card">
+            <h2>Plages de répétitions</h2>
+            <div class="split-bar" aria-hidden="true">
+              <span [style.width.%]="(zones().strength / zonesTotal()) * 100" [style.background]="colors.goal"></span>
+              <span [style.width.%]="(zones().hypertrophy / zonesTotal()) * 100" [style.background]="colors.intake"></span>
+              <span [style.width.%]="(zones().endurance / zonesTotal()) * 100" [style.background]="colors.burned"></span>
+            </div>
+            <div class="legend small">
+              <span><i [style.background]="colors.goal"></i>Force 1-5 : {{ round((zones().strength / zonesTotal()) * 100) }} %</span>
+              <span><i [style.background]="colors.intake"></i>Hypertrophie 6-12 : {{ round((zones().hypertrophy / zonesTotal()) * 100) }} %</span>
+              <span><i [style.background]="colors.burned"></i>Endurance 13+ : {{ round((zones().endurance / zonesTotal()) * 100) }} %</span>
+            </div>
+          </mat-card>
+        }
+
+        <app-muscle-load-card [all]="all()" [period]="period()" [today]="today" [weeks]="weeks()" />
+      </ng-template>
+    </mat-tab>
+
+    <mat-tab label="Séances">
+      <ng-template matTabContent>
+        <app-sessions-panel [sessions]="all()" [workouts]="data().workouts" [today]="today" />
+      </ng-template>
+    </mat-tab>
+
+    <mat-tab label="Import & cardio">
+      <ng-template matTabContent>
+        <app-hevy-link-card />
+        <app-cardio-card [from]="from()" />
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+}

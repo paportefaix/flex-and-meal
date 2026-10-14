@@ -1,0 +1,72 @@
+<mat-card appearance="outlined" class="card">
+  <div class="card-head">
+    <h2>Croisements</h2>
+    @if (view() !== 'nutrition' && lifts().length > 0) {
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width: auto; max-width: 60%">
+        <select matNativeControl aria-label="Exercice" [value]="exercise()" (change)="chosen.set($any($event.target).value)">
+          @for (l of lifts(); track l.name) {
+            <option [value]="l.name" [selected]="l.name === exercise()">{{ l.name }}</option>
+          }
+        </select>
+      </mat-form-field>
+    }
+  </div>
+  <div class="row wrap">
+    <app-segmented [options]="views" label="Croisement" [(value)]="view" />
+    <app-segmented [options]="periods" label="Période du croisement" [(value)]="weeks" />
+  </div>
+  <div style="margin-top: 0.75rem">
+    @switch (view()) {
+      @case ('weight') {
+        @if (!exercise()) {
+          <p class="muted small">Aucun exercice avec charge dans tes séances.</p>
+        } @else if (!data().weights.length) {
+          <p class="muted small">Ajoute au moins une pesée (page Corps) pour comparer ta force à ton poids.</p>
+        } @else if (relativePoints() < 2) {
+          <p class="muted small">Il faut au moins deux semaines avec une séance de cet exercice sur la période.</p>
+        } @else {
+          <div class="stats">
+            <app-stat label="1RM estimé" [value]="pct(summary().e1rmPct)" unit="" [tone]="tone(summary().e1rmPct)" />
+            <app-stat label="Force relative" [value]="pct(summary().relativePct)" unit="" [tone]="tone(summary().relativePct)" />
+            <app-stat label="Poids de corps" [value]="pct(summary().bodyWeightPct)" unit="" />
+          </div>
+          <app-chart [data]="weightChart()" [look]="weightLook" [height]="230" label="Force relative et poids de corps" />
+          @if (verdict(); as v) {
+            <p class="small">{{ v }}</p>
+          }
+          <p class="muted small">Force relative = meilleur 1RM estimé de la semaine ÷ ton poids de corps à cette date. En sèche ou en prise de masse, elle distingue une vraie perte de force d'un simple changement de poids.</p>
+        }
+      }
+      @case ('nutrition') {
+        @if (!hasNutrient()) {
+          <p class="muted small">Il faut au moins 3 jours renseignés dans le journal sur une semaine pour calculer une moyenne.</p>
+        } @else {
+          <div style="margin-bottom: 0.5rem">
+            <app-segmented [options]="nutrients" label="Donnée nutritionnelle" [(value)]="nutrient" />
+          </div>
+          <app-chart [data]="nutritionChart()" [look]="nutritionLook()" [height]="230" label="Volume et apport nutritionnel" />
+          <p class="small">{{ correlationText() }}</p>
+          <p class="muted small">Une corrélation n'est pas une causalité : une semaine chargée peut aussi te faire manger plus. Moyennes calculées sur les jours renseignés, pour les semaines avec au moins 3 jours de journal.</p>
+        }
+      }
+      @case ('waist') {
+        @if (!exercise()) {
+          <p class="muted small">Aucun exercice avec charge dans tes séances.</p>
+        } @else if (waistPoints() < 2) {
+          <p class="muted small">Il faut au moins deux mensurations de tour de taille (page Corps) sur la période.</p>
+        } @else {
+          <div class="stats">
+            <app-stat label="Tour de taille" [value]="summary().waistDelta === null ? '–' : signed(summary().waistDelta!, 1).replace('.', ',')" unit="cm"
+                      [tone]="summary().waistDelta === null ? undefined : summary().waistDelta! <= 0 ? 'good' : 'bad'" />
+            <app-stat label="1RM estimé" [value]="pct(summary().e1rmPct)" unit="" [tone]="tone(summary().e1rmPct)" />
+          </div>
+          <app-chart [data]="waistChart()" [look]="waistLook" [height]="230" label="1RM estimé et tour de taille" />
+          @if (waistNote(); as note) {
+            <p class="small">{{ note }}</p>
+          }
+          <p class="muted small">Les mensurations sont ponctuelles : les points sont reliés entre deux relevés.</p>
+        }
+      }
+    }
+  </div>
+</mat-card>
