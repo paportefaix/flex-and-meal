@@ -204,6 +204,8 @@ button.cal-day { cursor: pointer; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 1rem 0 0.5rem; }
 .chip { font-size: 0.7rem; padding: 1px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+.macro-chips { margin: 0.25rem 0 0.5rem; }
+.macro-chip { background: color-mix(in srgb, var(--macro-color) 18%, transparent); color: var(--macro-color); border: 1px solid color-mix(in srgb, var(--macro-color) 45%, transparent); }
 details.sess { border-top: 1px solid var(--border); padding-top: 0.6rem; margin-top: 0.6rem; }
 details.sess > summary { display: flex; justify-content: space-between; gap: 0.75rem; align-items: flex-start; margin-top: 0; color: var(--text); }
 .sess-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }

@@ -31,6 +31,12 @@ Feature: Daily food and activity journal
       Then the "Petit-déjeuner" badge shows "300 kcal"
       And the "Déjeuner" badge shows "700 kcal"
 
+    Scenario: Each meal shows its macros as coloured chips
+      Given I logged a lunch with 5 g of protein, 56 g of carbs and 1 g of fat
+      Then the "Déjeuner" card shows the chips "Protéines 5 g", "Glucides 56 g" and "Lipides 1 g"
+      And the chips use the same colours as the daily macro bars
+      And a meal without entries shows no chips
+
   Rule: I can log a food by quantity
 
     Scenario: Log a food from the catalogue
@@ -47,13 +53,18 @@ Feature: Daily food and activity journal
       When I click "Retirer Riz blanc cuit"
       Then it disappears from the lunch
 
-  Rule: Quick add logs a dish when only its calories are known
+  Rule: Quick add logs a dish when only its macros are known (calories required, carbs/fat/protein optional)
 
     Scenario: Quick add
       When I click "+ Saisie libre" at dinner
       And I enter "Restaurant" with 850 kcal and validate
       Then dinner lists "Restaurant" with 1 unité and 850 kcal
       And protein, carbs and fat are 0 g
+
+    Scenario: Quick add with macros
+      When I click "+ Saisie libre" at dinner
+      And I enter "Restaurant" with 850 kcal, 90 g carbs, 30 g fat, 45 g protein and validate
+      Then the logged entry has carbs 90 g, fat 30 g and protein 45 g
 
     Scenario Outline: Invalid quick add is ignored
       When I click "+ Saisie libre"
@@ -128,6 +139,10 @@ Feature: Daily food and activity journal
     Scenario: Net calories
       Given I ate 2200 kcal and burned 300 kcal in cardio and strength
       Then the net is 1900 kcal
+
+    Scenario: Remaining calories ignore sport
+      Given my goal is 2000 kcal, I ate 1500 kcal and burned 300 kcal
+      Then "Restantes" shows 500 and "Sport" shows 300
 
     Scenario: Burned calories and minutes add cardio and strength
       Given a 30-minute cardio session of 300 kcal

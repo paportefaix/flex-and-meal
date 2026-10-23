@@ -1,0 +1,80 @@
+<mat-card appearance="outlined" class="card">
+  <div class="card-head">
+    <h2>Progression conseillée</h2>
+  </div>
+  @if (shown().length) {
+    <div class="scroll-x">
+      <table class="plain">
+        <thead>
+          <tr>
+            <th>Exercice</th>
+            <th>Objectif</th>
+            <th class="num">Prochaine séance</th>
+            <th>Conseil</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of shown(); track r.name) {
+            <tr>
+              <td>
+                {{ r.name }}
+                @if (r.advice; as a) {
+                  <div><span [class]="'badge tag ' + kinds[a.kind].badge">{{ kinds[a.kind].label }}</span></div>
+                }
+              </td>
+              <td>
+                <div class="row" style="flex-wrap: nowrap; gap: 0.25rem; align-items: flex-end">
+                  <label style="display: flex; flex-direction: column">
+                    <span class="small muted">Séries</span>
+                    <input #sets type="number" inputmode="numeric" step="1" min="1" max="20" style="width: 3.4rem" [attr.aria-label]="'Séries visées, ' + r.name"
+                           [value]="r.target?.sets ?? ''" (change)="save(r.name, sets.value, weight.value, min.value, max.value)" />
+                  </label>
+                  <span aria-hidden="true">×</span>
+                  <label style="display: flex; flex-direction: column">
+                    <span class="small muted">Poids (kg)</span>
+                    <input #weight type="number" inputmode="decimal" step="any" min="0" style="width: 4.6rem" [attr.aria-label]="'Poids visé en kg, ' + r.name"
+                           [value]="r.target?.weight ?? ''" (change)="save(r.name, sets.value, weight.value, min.value, max.value)" />
+                  </label>
+                  <span aria-hidden="true">×</span>
+                  <label style="display: flex; flex-direction: column">
+                    <span class="small muted">Rép. min</span>
+                    <input #min type="number" inputmode="numeric" step="1" min="1" max="100" style="width: 3.4rem" [attr.aria-label]="'Répétitions minimum, ' + r.name"
+                           [value]="r.target?.minReps ?? ''" (change)="save(r.name, sets.value, weight.value, min.value, max.value)" />
+                  </label>
+                  <span aria-hidden="true">à</span>
+                  <label style="display: flex; flex-direction: column">
+                    <span class="small muted">Rép. max</span>
+                    <input #max type="number" inputmode="numeric" step="1" min="1" max="100" style="width: 3.4rem" [attr.aria-label]="'Répétitions maximum, ' + r.name"
+                           [value]="r.target?.maxReps ?? ''" (change)="save(r.name, sets.value, weight.value, min.value, max.value)" />
+                  </label>
+                </div>
+                @if (invalid() === r.name) {
+                  <div class="bad small">Renseigne séries et répétitions en nombres entiers (min ≤ max) ; le poids (décimal) est facultatif.</div>
+                }
+              </td>
+              @if (r.advice; as a) {
+                <td class="num">{{ fr(a.nextWeight) }} kg × {{ a.targetReps }}</td>
+                <td class="small">{{ a.message }}</td>
+              } @else {
+                <td class="num">–</td>
+                <td class="small muted">Pas assez de séances pour conseiller (au moins 3).</td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <p class="muted small">Aucun exercice lesté récent à conseiller.</p>
+  }
+  @if (rows().length > collapsedRows) {
+    <button mat-stroked-button style="margin-top: 0.5rem" (click)="expanded.set(!expanded())">
+      {{ expanded() ? 'Réduire' : 'Voir les ' + (rows().length - collapsedRows) + ' autres' }}
+    </button>
+  }
+  <p class="muted small">
+    Double progression à partir de la dernière séance de chaque exercice lesté. Renseigne l'objectif (poids facultatif × séries × répétitions min à max) pour affiner les conseils ;
+    sans objectif, on suppose 8 à 12 répétitions. Quand tu atteins le haut de la fourchette sur toutes les séries visées (ou que tes séries sont faciles, RPE 7 ou moins),
+    on augmente la charge ; sinon on vise une répétition de plus. Ce sont des repères généraux, à ajuster selon tes sensations. Vide tous les champs pour retirer l'objectif.
+  </p>
+</mat-card>

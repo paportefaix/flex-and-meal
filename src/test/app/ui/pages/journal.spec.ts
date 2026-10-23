@@ -20,6 +20,16 @@ describe('Journal', () => {
     for (const t of ['Petit-déjeuner', 'Déjeuner', 'Collation', 'Dîner', 'Sport']) expect(await screen.findByRole('heading', { name: t })).toBeInTheDocument();
   });
 
+  it('affiche les macros de chaque repas en chips', async () => {
+    await renderWithStore(Journal, { data: makeData({ foods: [riz], log: [logged] }) });
+    await screen.findByRole('heading', { name: 'Déjeuner' });
+    const lunch = within(section('Déjeuner'));
+    expect(lunch.getByText('Protéines 5 g')).toBeInTheDocument();
+    expect(lunch.getByText('Glucides 56 g')).toBeInTheDocument();
+    expect(lunch.getByText('Lipides 1 g')).toBeInTheDocument();
+    expect(within(section('Dîner')).queryByText(/Protéines/)).toBeNull();
+  });
+
   it('ajoute un aliment à un repas', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('[]'));
     await renderWithStore(Journal, { data: makeData({ foods: [riz] }) });
@@ -50,6 +60,20 @@ describe('Journal', () => {
     await userEvent.click(await dinner.findByRole('button', { name: '+ Saisie libre' }));
     await userEvent.click(await dinner.findByRole('button', { name: 'Annuler' }));
     expect(await dinner.findByRole('button', { name: '+ Saisie libre' })).toBeInTheDocument();
+  });
+
+  it('ajoute une saisie libre avec glucides, lipides et protéines', async () => {
+    await renderWithStore(Journal);
+    await screen.findByRole('heading', { name: 'Dîner' });
+    const dinner = within(section('Dîner'));
+    await userEvent.click(dinner.getByRole('button', { name: '+ Saisie libre' }));
+    await userEvent.type(await dinner.findByPlaceholderText('Plat'), 'Restaurant');
+    await userEvent.type(dinner.getByPlaceholderText('kcal'), '850');
+    await userEvent.type(dinner.getByLabelText('Glucides'), '90');
+    await userEvent.type(dinner.getByLabelText('Lipides'), '30');
+    await userEvent.type(dinner.getByLabelText('Protéines'), '45');
+    await userEvent.click(dinner.getByRole('button', { name: 'OK' }));
+    await waitFor(async () => expect((await loadFromDb())?.log).toEqual([expect.objectContaining({ name: 'Restaurant', kcal: 850, carbs: 90, fat: 30, protein: 45 })]));
   });
 
   it('ajoute un repas type', async () => {

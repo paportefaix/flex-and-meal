@@ -5,6 +5,7 @@ import type { LogItem, MealTemplate } from '../nutrition/domain/meal';
 import { DEFAULT_KCAL_GOAL, type Settings } from '../settings/domain/settings';
 import { uid } from '../shared/kernel/id';
 import type { StrengthSession, Workout } from '../training/domain/session';
+import { isValidTarget, type ExerciseTarget } from '../training/domain/target';
 
 /** Agrégat racine : l'ensemble des données de l'utilisateur, tel que sauvegardé et exporté. */
 export interface AppData {
@@ -14,12 +15,14 @@ export interface AppData {
   log: LogItem[];
   workouts: Workout[];
   strength: StrengthSession[];
+  /** Objectifs de séries et de répétitions annotés par exercice (absents des exports antérieurs). */
+  targets: ExerciseTarget[];
   weights: WeightEntry[];
   measurements: Measurement[];
   settings: Settings;
 }
 
-export const COLLECTIONS = ['foods', 'templates', 'log', 'workouts', 'strength', 'weights', 'measurements'] as const;
+export const COLLECTIONS = ['foods', 'templates', 'log', 'workouts', 'strength', 'targets', 'weights', 'measurements'] as const;
 
 export const initialData = (): AppData => ({
   version: 1,
@@ -28,6 +31,7 @@ export const initialData = (): AppData => ({
   log: [],
   workouts: [],
   strength: [],
+  targets: [],
   weights: [],
   measurements: [],
   settings: { kcalGoal: DEFAULT_KCAL_GOAL },
@@ -39,5 +43,6 @@ export function parseData(raw: string): AppData {
   if (parsed?.version !== 1) throw new Error('Format de données inconnu');
   const data: AppData = { ...initialData(), ...parsed };
   for (const c of COLLECTIONS) if (!Array.isArray(data[c])) (data as unknown as Record<string, unknown>)[c] = [];
+  data.targets = data.targets.filter(isValidTarget);
   return data;
 }

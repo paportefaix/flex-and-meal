@@ -15,7 +15,7 @@ export class Stat {
   readonly tone = input<'good' | 'bad'>();
 }
 
-/** Bilan calorique d'une journée. L'objectif est augmenté des calories brûlées en sport. */
+/** Bilan calorique d'une journée. Les calories brûlées en sport sont affichées mais ne modifient pas le restant. */
 @Component({
   selector: 'app-day-summary',
   imports: [Stat],
@@ -31,7 +31,7 @@ export class DaySummary {
   protected readonly macros = MACROS;
   protected readonly round = round;
   protected readonly abs = Math.abs;
-  protected readonly budget = computed(() => this.goal() + this.burned());
+  protected readonly budget = computed(() => this.goal());
   protected readonly remaining = computed(() => this.budget() - this.intake().kcal);
   protected readonly over = computed(() => this.remaining() < 0);
   protected readonly pct = computed(() => (this.budget() > 0 ? Math.min(100, (this.intake().kcal / this.budget()) * 100) : 0));

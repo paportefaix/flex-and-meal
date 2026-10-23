@@ -29,11 +29,11 @@ describe('DateField', () => {
 });
 
 describe('DaySummary', () => {
-  it('affiche les calories restantes, sport inclus dans le budget', async () => {
+  it('affiche les calories restantes, sport non déduit', async () => {
     await renderWithStore(DaySummary, { inputs: { intake, burned: 300, goal: 2000 } });
     expect(screen.getByText('Restantes')).toBeInTheDocument();
-    expect(screen.getByText('800')).toBeInTheDocument(); // 2000 + 300 - 1500
-    expect(screen.getByText('−300')).toBeInTheDocument();
+    expect(screen.getByText('500')).toBeInTheDocument(); // 2000 - 1500, le sport n'est pas déduit
+    expect(screen.getByText('300')).toBeInTheDocument();
     expect(screen.getByText(/Protéines 100 g · Glucides 150 g · Lipides 50 g/)).toBeInTheDocument();
   });
 

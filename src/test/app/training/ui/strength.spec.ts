@@ -7,7 +7,7 @@ import { addDays, todayISO } from '../../../../app/shared/kernel/dates';
 import { makeData, makeSessions, renderWithStore } from '../../../render';
 import type { StrengthSession } from '../../../../app/training/domain/session';
 import { Strength } from '../../../../app/training/ui/strength';
-import { ConsistencyCard, CrossCard, MuscleLoadCard, TrendsCard } from '../../../../app/training/ui/strength-analysis';
+import { ConsistencyCard, CrossCard, MuscleLoadCard, ProgressionCard, TrendsCard } from '../../../../app/training/ui/strength-analysis';
 import { MuscleHeatmap, MuscleMap, SessionsPanel, WeekBanner } from '../../../../app/training/ui/strength-views';
 
 const today = todayISO();
@@ -105,7 +105,8 @@ describe('Strength — avec séances', () => {
     }
     await userEvent.click(screen.getByRole('tab', { name: 'Muscles' }));
     expect(await screen.findByText('Carte musculaire')).toBeInTheDocument();
-    expect(screen.getByText('Plages de répétitions')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('radio', { name: '8 semaines' }));
+    expect(await screen.findByText('Plages de répétitions')).toBeInTheDocument();
     fixture.destroy();
     TestBed.resetTestingModule();
     await renderWithStore(Strength, { data: withSessions() });
@@ -177,6 +178,28 @@ describe('TrendsCard', () => {
     await renderWithStore(TrendsCard, { inputs: { sessions: makeSessions(), today } });
     await userEvent.click(await screen.findByRole('radio', { name: 'À surveiller' }));
     expect(await screen.findByText(/Aucun plateau ni baisse|Aucun exercice/)).toBeInTheDocument();
+  });
+});
+
+describe('ProgressionCard', () => {
+  it('annote un objectif, affine le conseil et le retire', async () => {
+    const { store } = await renderWithStore(ProgressionCard, { inputs: { sessions: manyExercises(), today } });
+    const name = NAMES[0];
+    const sets = await screen.findByLabelText(`Séries visées, ${name}`);
+    await userEvent.type(sets, '4');
+    await userEvent.type(screen.getByLabelText(`Répétitions minimum, ${name}`), '6');
+    await userEvent.type(screen.getByLabelText(`Répétitions maximum, ${name}`), '8');
+    fireEvent.change(screen.getByLabelText(`Répétitions maximum, ${name}`));
+    await waitFor(() => expect(store.data().targets).toEqual([{ id: name, sets: 4, minReps: 6, maxReps: 8 }]));
+    await userEvent.clear(screen.getByLabelText(`Répétitions minimum, ${name}`));
+    await userEvent.type(screen.getByLabelText(`Répétitions minimum, ${name}`), '9');
+    fireEvent.change(screen.getByLabelText(`Répétitions minimum, ${name}`));
+    expect(await screen.findByText(/Renseigne séries et répétitions en nombres entiers/)).toBeInTheDocument();
+    for (const label of ['Séries visées', 'Répétitions minimum', 'Répétitions maximum']) {
+      await userEvent.clear(screen.getByLabelText(`${label}, ${name}`));
+      fireEvent.change(screen.getByLabelText(`${label}, ${name}`));
+    }
+    await waitFor(() => expect(store.data().targets).toEqual([]));
   });
 });
 

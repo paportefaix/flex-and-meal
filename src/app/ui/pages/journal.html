@@ -19,6 +19,11 @@
       <span class="badge">{{ round(kcal(m.key)) }} kcal</span>
     </div>
     @if (items(m.key).length > 0) {
+      <div class="chips macro-chips">
+        @for (mc of macros; track mc.key) {
+          <span class="chip macro-chip" [style.--macro-color]="mc.color">{{ mc.label }} {{ round(nutrients(m.key)[mc.key]) }} g</span>
+        }
+      </div>
       <ul class="items">
         @for (i of items(m.key); track i.id) {
           <li>
@@ -42,7 +47,7 @@
           </select>
         </mat-form-field>
       }
-      <app-quick-add (add)="addQuick(m.key, $event.name, $event.kcal)" />
+      <app-quick-add (add)="addQuick(m.key, $event)" />
       @if (hasFoods(m.key)) {
         <button mat-stroked-button (click)="saveAsTemplate(m.key)">Enregistrer comme repas type</button>
       }

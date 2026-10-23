@@ -40,6 +40,7 @@ Status: ✅ done · 🔜 suggested next · 💡 backlog
 
 - ✅ **Strength** (`/muscu`): Hevy CSV import + API sync, weekly volume, estimated 1RM, personal records, muscle split, kcal estimated from MET × body weight × duration and counted in the Journal / Week / Home budgets.
 - ✅ **Strength analysis** (`/muscu`, `src/strengthAnalysis.ts`): per-exercise trend table (sparkline, 4 / 12-week change, plateau / decline detection), weekly volume and hard sets (RPE ≥ 8 or failure) per muscle group with training frequency, consistency (week streak, session heatmap, density), and cross-views with body weight (relative strength), nutrition (protein / kcal vs. volume) and waist. All derived from `data.strength` and the other collections, so nothing extra to back up.
+- ✅ **Progression advice** (`/muscu`, `training/domain/strengthProgression.ts`): per weighted exercise, next-session advice from the last session (double progression 8–12 reps: raise the load, add a rep, hold, or deload on plateau). Each exercise can be annotated with a target (sets × min–max reps, stored in `data.targets`, part of the JSON export) that refines the advice; without a target 8–12 reps is assumed.
 - ✅ **Manual cardio entry** (duration, distance, automatic kcal estimate) in the Journal and on `/muscu`.
 - 💡 Import from Strava / Garmin export files.
 

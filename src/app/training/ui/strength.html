@@ -103,6 +103,8 @@
 
         <app-trends-card [sessions]="all()" [today]="today" [selected]="selected()" [selectable]="true" (picked)="selectExercise($event)" />
 
+        <app-progression-card [sessions]="all()" [today]="today" />
+
         <mat-card appearance="outlined" class="card">
           <h2>Records personnels</h2>
           <div class="scroll-x">

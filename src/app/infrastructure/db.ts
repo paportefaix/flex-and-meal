@@ -6,6 +6,7 @@ import type { CiqualFood, Food } from '../nutrition/domain/food';
 import type { LogItem, MealTemplate } from '../nutrition/domain/meal';
 import type { Settings } from '../settings/domain/settings';
 import type { StrengthSession, Workout } from '../training/domain/session';
+import type { ExerciseTarget } from '../training/domain/target';
 
 // Base locale IndexedDB (via Dexie) : une table par collection, les réglages dans `meta`.
 
@@ -20,6 +21,7 @@ class AppDb extends Dexie {
   log!: EntityTable<LogItem, 'id'>;
   workouts!: EntityTable<Workout, 'id'>;
   strength!: EntityTable<StrengthSession, 'id'>;
+  targets!: EntityTable<ExerciseTarget, 'id'>;
   weights!: EntityTable<WeightEntry, 'id'>;
   measurements!: EntityTable<Measurement, 'id'>;
   meta!: EntityTable<Meta, 'key'>;
@@ -39,18 +41,19 @@ class AppDb extends Dexie {
     // Table de référence CIQUAL (hors sauvegarde JSON : elle est rechargée depuis public/ciqual.json).
     this.version(2).stores({ ciqual: 'id' });
     this.version(3).stores({ strength: 'id, date' });
+    this.version(4).stores({ targets: 'id' });
   }
 }
 
 const db = new AppDb();
 
-const COLLECTIONS = ['foods', 'templates', 'log', 'workouts', 'strength', 'weights', 'measurements'] as const;
+const COLLECTIONS = ['foods', 'templates', 'log', 'workouts', 'strength', 'targets', 'weights', 'measurements'] as const;
 
 /** Charge toutes les données, ou `null` si la base est encore vide. */
 export async function loadFromDb(): Promise<AppData | null> {
   const settings = await db.meta.get('settings');
   if (!settings) return null;
-  const [foods, templates, log, workouts, strength, weights, measurements] = await Promise.all(COLLECTIONS.map((c) => db[c].toArray()));
+  const [foods, templates, log, workouts, strength, targets, weights, measurements] = await Promise.all(COLLECTIONS.map((c) => db[c].toArray()));
   return {
     version: 1,
     foods: foods as Food[],
@@ -58,6 +61,7 @@ export async function loadFromDb(): Promise<AppData | null> {
     log: log as LogItem[],
     workouts: workouts as Workout[],
     strength: strength as StrengthSession[],
+    targets: targets as ExerciseTarget[],
     weights: weights as WeightEntry[],
     measurements: measurements as Measurement[],
     settings: settings.value,
@@ -66,7 +70,7 @@ export async function loadFromDb(): Promise<AppData | null> {
 
 /** Écrit uniquement ce qui a changé entre `prev` et `next` (comparaison par référence, par id). */
 export async function saveDiff(prev: AppData | null, next: AppData): Promise<void> {
-  await db.transaction('rw', [db.foods, db.templates, db.log, db.workouts, db.strength, db.weights, db.measurements, db.meta], async () => {
+  await db.transaction('rw', [db.foods, db.templates, db.log, db.workouts, db.strength, db.targets, db.weights, db.measurements, db.meta], async () => {
     for (const c of COLLECTIONS) {
       const before = (prev?.[c] ?? []) as { id: string }[];
       const after = next[c] as { id: string }[];

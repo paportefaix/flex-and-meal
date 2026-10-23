@@ -20,10 +20,11 @@ import { fetchSharedWorkout, parseWorkoutRefs } from '../infrastructure/hevyApi'
 import { parseHevyCsv } from '../infrastructure/hevyCsv';
 import { CardioForm } from './cardio-form';
 import { fmtDuration, fr, MUSCLE_COLORS, tonnes } from './muscle-colors';
-import { ConsistencyCard, CrossCard, MuscleLoadCard, TrendsCard } from './strength-analysis';
+import { ConsistencyCard, CrossCard, MuscleLoadCard, ProgressionCard, TrendsCard } from './strength-analysis';
 import { MuscleHeatmap, MuscleMap, SessionsPanel, WeekBanner } from './strength-views';
 
 const PERIODS: SegmentOption<number>[] = [
+  { value: 1, label: '1 semaine' },
   { value: 4, label: '4 semaines' },
   { value: 8, label: '8 semaines' },
   { value: 26, label: '6 mois' },
@@ -144,6 +145,7 @@ function loadTab(): number {
     SessionsPanel,
     Stat,
     TrendsCard,
+    ProgressionCard,
     WeekBanner,
   ],
   templateUrl: './strength.html',
@@ -163,7 +165,7 @@ export class Strength {
   protected readonly newRecordSince = addDays(this.today, -14);
 
   protected readonly tabIndex = signal(loadTab());
-  protected readonly weeks = signal(8);
+  protected readonly weeks = signal(1);
   protected readonly exercise = signal<string | null>(null);
   protected readonly volumeBy = signal<'muscle' | 'total'>('muscle');
   protected readonly message = signal<Message | null>(null);

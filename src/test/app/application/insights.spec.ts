@@ -29,6 +29,7 @@ const dataWith = (log: LogItem[], over: Partial<AppData> = {}): AppData => ({
   strength: [],
   weights: [],
   measurements: [],
+  targets: [],
   settings: { kcalGoal: 2000 },
   ...over,
 });

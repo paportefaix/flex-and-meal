@@ -8,7 +8,7 @@ import { dayTotals } from '../../application/dailySummary';
 import { weightOn } from '../../body/domain/weight';
 import type { Food } from '../../nutrition/domain/food';
 import { type LogItem, type MealType, MEALS } from '../../nutrition/domain/meal';
-import { portionNutrients, sumNutrients } from '../../nutrition/domain/nutrients';
+import { MACROS, portionNutrients, sumNutrients } from '../../nutrition/domain/nutrients';
 import { FoodPicker } from '../../nutrition/ui/food-picker';
 import { addDays, fmtDate, todayISO } from '../../shared/kernel/dates';
 import { uid } from '../../shared/kernel/id';
@@ -22,24 +22,32 @@ import { DaySummary } from '../shared/day-summary';
 import { queryParam } from '../shared/query-param';
 import { Store } from '../state/store';
 
-/** Saisie libre d'un plat dont on ne connaît que les calories (restaurant, etc.). */
+/** Saisie libre d'un plat dont on ne connaît que les macros (restaurant, etc.) ; seules les calories sont obligatoires. */
 @Component({
   selector: 'app-quick-add',
   imports: [FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
   templateUrl: './quick-add.html',
+  host: { style: 'display: block; max-width: 100%' },
 })
 export class QuickAdd {
-  readonly add = output<{ name: string; kcal: number }>();
+  readonly add = output<{ name: string; kcal: number; carbs: number; fat: number; protein: number }>();
   protected readonly open = signal(false);
   protected readonly name = signal('');
   protected readonly kcal = signal('');
+  protected readonly carbs = signal('');
+  protected readonly fat = signal('');
+  protected readonly protein = signal('');
 
   protected submit() {
     const k = num(this.kcal());
-    if (!this.name().trim() || !(k >= 0)) return;
-    this.add.emit({ name: this.name().trim(), kcal: k });
+    const [carbs, fat, protein] = [this.carbs(), this.fat(), this.protein()].map((v) => (v.trim() ? num(v) : 0));
+    if (!this.name().trim() || !(k >= 0) || !(carbs >= 0) || !(fat >= 0) || !(protein >= 0)) return;
+    this.add.emit({ name: this.name().trim(), kcal: k, carbs, fat, protein });
     this.name.set('');
     this.kcal.set('');
+    this.carbs.set('');
+    this.fat.set('');
+    this.protein.set('');
     this.open.set(false);
   }
 }
@@ -78,6 +86,7 @@ export class Journal {
   private readonly param = queryParam('d');
   protected readonly data = this.store.data;
   protected readonly meals = MEALS;
+  protected readonly macros = MACROS;
   protected readonly today = todayISO();
   protected readonly round = round;
 
@@ -97,8 +106,12 @@ export class Journal {
     return this.totals().items.filter((i) => i.meal === meal);
   }
 
+  protected nutrients(meal: MealType) {
+    return sumNutrients(this.items(meal));
+  }
+
   protected kcal(meal: MealType) {
-    return sumNutrients(this.items(meal)).kcal;
+    return this.nutrients(meal).kcal;
   }
 
   protected hasFoods(meal: MealType) {
@@ -118,8 +131,8 @@ export class Journal {
     this.addItems([this.fromFood(meal, food, quantity)]);
   }
 
-  protected addQuick(meal: MealType, name: string, kcal: number) {
-    this.addItems([{ meal, name, quantity: 1, unit: 'unité', kcal, protein: 0, carbs: 0, fat: 0 }]);
+  protected addQuick(meal: MealType, e: { name: string; kcal: number; carbs: number; fat: number; protein: number }) {
+    this.addItems([{ meal, quantity: 1, unit: 'unité', ...e }]);
   }
 
   protected pickTemplate(meal: MealType, e: Event) {

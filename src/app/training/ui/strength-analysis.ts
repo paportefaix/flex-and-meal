@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,10 +10,13 @@ import { fmtDate, fmtShort } from '../../shared/kernel/dates';
 import { round, signed } from '../../shared/kernel/numbers';
 import { AppChart, COLORS, type ChartStyle } from '../../ui/shared/chart';
 import { Stat } from '../../ui/shared/day-summary';
+import { Store } from '../../ui/state/store';
 import { Segmented, type SegmentOption } from '../../ui/shared/segmented';
 import type { StrengthSession } from '../domain/session';
 import { MUSCLE_GROUPS, weeklyVolume } from '../domain/strength';
 import { exerciseTrends, muscleSummary, sessionDensity, sessionHeatmap, weekStreaks, weeklyMuscleLoad, type ExerciseTrend, type TrendStatus } from '../domain/strengthAnalysis';
+import { ORDER, progressionAdvice, type AdviceKind } from '../domain/strengthProgression';
+import { makeTarget, setTarget } from '../domain/target';
 import { MUSCLE_COLORS, WEEKDAY_INITIALS, fr } from './muscle-colors';
 
 const pct = (n: number | null) => (n === null ? '–' : `${signed(n, 1).replace('.', ',')} %`);
@@ -114,6 +117,63 @@ export class TrendsCard {
     return t.status === 'plateau'
       ? `Meilleur il y a ${t.sinceBest} séance${t.sinceBest > 1 ? 's' : ''} (${t.daysSinceBest} j)`
       : `${t.sessions} séance${t.sessions > 1 ? 's' : ''} · dernière ${fmtShort(t.lastDate)}`;
+  }
+}
+
+// --- 2. Progression conseillée ---
+
+const KINDS: Record<AdviceKind, { label: string; badge: string }> = {
+  increase: { label: 'Augmenter la charge', badge: 'raw' },
+  sets: { label: 'Ajouter une série', badge: 'unknown' },
+  reps: { label: 'Gagner des répétitions', badge: 'unknown' },
+  hold: { label: 'Consolider', badge: 'processed' },
+  deload: { label: 'Décharge', badge: 'ultra' },
+};
+
+@Component({
+  selector: 'app-progression-card',
+  imports: [MatButtonModule, MatCardModule],
+  templateUrl: './progression-card.html',
+})
+export class ProgressionCard {
+  private readonly store = inject(Store);
+  readonly sessions = input.required<StrengthSession[]>();
+  readonly today = input.required<string>();
+
+  protected readonly kinds = KINDS;
+  protected readonly collapsedRows = COLLAPSED_ROWS;
+  protected readonly fr = fr;
+  protected readonly expanded = signal(false);
+
+  private readonly targets = computed(() => this.store.data().targets);
+  private readonly advice = computed(() => new Map(progressionAdvice(this.sessions(), this.today(), this.targets()).map((a) => [a.name, a])));
+  private readonly order = computed(() => new Map(progressionAdvice(this.sessions(), this.today()).map((a) => [a.name, ORDER[a.kind]])));
+  /** Exercices lestés encore pratiqués, avec leur conseil (s'il y en a un) et leur objectif annoté. */
+  protected readonly rows = computed(() => {
+    const [advice, targets] = [this.advice(), this.targets()];
+    const rows = exerciseTrends(this.sessions(), this.today())
+      .filter((t) => t.unit === 'kg' && t.status !== 'inactive')
+      .map((t) => ({ name: t.name, advice: advice.get(t.name), target: targets.find((x) => x.id === t.name) }));
+    // Tri sur le conseil sans objectif : enregistrer un objectif ne doit pas déplacer la ligne en cours de saisie.
+    const rank = this.order();
+    return rows.sort((a, b) => (rank.get(a.name) ?? 9) - (rank.get(b.name) ?? 9) || a.name.localeCompare(b.name));
+  });
+  protected readonly shown = computed(() => (this.expanded() ? this.rows() : this.rows().slice(0, COLLAPSED_ROWS)));
+  protected readonly invalid = signal<string | null>(null);
+
+  /** Enregistre l'objectif d'un exercice ; champs vides le suppriment, une saisie incomplète est ignorée. */
+  protected save(name: string, sets: string, weight: string, min: string, max: string) {
+    if (!sets.trim() && !min.trim() && !max.trim() && !weight.trim()) {
+      this.invalid.set(null);
+      this.store.update((d) => ({ ...d, targets: setTarget(d.targets, name, null) }));
+      return;
+    }
+    debugger;
+    const target = makeTarget(name, sets, min, max, weight);
+    this.invalid.set(target ? null : name);
+    if (target) {
+      this.store.update((d) => ({...d, targets: setTarget(d.targets, name, target)}));
+    }
   }
 }
 

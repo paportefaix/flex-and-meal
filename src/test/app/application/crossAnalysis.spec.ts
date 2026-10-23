@@ -26,6 +26,7 @@ describe('croisements', () => {
     strength: [],
     weights: [],
     measurements: [],
+    targets: [],
     settings: { kcalGoal: 2000 },
     ...over,
   });

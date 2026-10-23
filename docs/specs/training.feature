@@ -222,6 +222,62 @@ Feature: Strength training import, metrics and analysis
       Given an exercise with no session 4 weeks ago
       Then its 4-week variation is not available
 
+  Rule: Progression advice suggests the next load for each weighted exercise
+
+    Scenario Outline: Advice for the next session
+      Given a weighted exercise that is active with at least 3 sessions
+      And its heaviest working sets of the last session <situation>
+      Then the advice is "<advice>"
+
+      Examples:
+        | situation                                       | advice                                    |
+        | all reach 12 reps or more                       | increase the load by 2.5 kg (1 kg if < 20)|
+        | are all rated RPE 7 or less with 8+ reps        | increase the load                         |
+        | stay below 12 reps                              | same load, aim for one more rep           |
+        | belong to an exercise in plateau                | deload to 90 % of the load                |
+        | belong to an exercise in decline                | hold the load                             |
+
+    Scenario: Warm-ups and lighter sets are ignored
+      Given a last session with warm-up sets and lighter drop sets
+      Then only the sets at the heaviest working load are considered
+
+    Scenario Outline: A target annotated on the exercise refines the advice
+      Given I annotated "Bench Press" with a target of <sets> sets of <min> to <max> reps
+      And the heaviest sets of its last session <situation>
+      Then the advice is "<advice>"
+
+      Examples:
+        | sets | min | max | situation                                   | advice                                          |
+        | 3    | 4   | 6   | are 3 sets that all reach 6 reps            | increase the load, aim for 4 reps               |
+        | 4    | 8   | 12  | are 2 sets that all reach 12 reps           | add sets before raising the load                |
+        | 3    | 8   | 12  | are 2 sets below 8 reps                     | same load, aim for one more rep, note the gap   |
+
+    Scenario: Targets are stored by exercise name and survive re-imports
+      Given I annotated an exercise with 4 sets of 6 to 8 reps
+      When I import the Hevy sessions again
+      Then the target is unchanged
+
+    Scenario: Incomplete or inconsistent targets are not saved
+      When I fill the sets but leave a repetition bound empty, or the minimum is above the maximum
+      Then the target is not saved and a message asks for the sets and repetitions
+      When I clear all the fields
+      Then the target is removed
+
+    Scenario: A target weight is optional and may be decimal
+      When I fill 55 kg, 1 set of 10 to 12 reps
+      Then the target is saved with its weight
+      When I fill 57,5 kg with sets and repetitions
+      Then the weight is stored as 57.5
+
+    Scenario: Targets are part of the export
+      Given I annotated exercises with targets
+      Then the JSON export contains them
+      And an export made before targets existed still imports, with no targets
+
+    Scenario: New, inactive and bodyweight exercises get no advice
+      Given an exercise with fewer than 3 sessions, or not done for more than 35 days, or without added load
+      Then no advice is given for it
+
   Rule: Training insights cross-reference the rest of the app
 
     Scenario: All derived values are computed on the fly

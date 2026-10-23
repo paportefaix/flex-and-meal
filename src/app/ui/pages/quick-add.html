@@ -1,10 +1,19 @@
 @if (open()) {
-  <form class="row" (ngSubmit)="submit()">
+  <form class="row wrap" style="margin-top: 0" (ngSubmit)="submit()">
     <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <input matInput name="name" placeholder="Plat" aria-label="Plat" autocomplete="off" [(ngModel)]="name" />
     </mat-form-field>
     <mat-form-field class="qty" appearance="outline" subscriptSizing="dynamic">
       <input matInput name="kcal" inputmode="decimal" placeholder="kcal" aria-label="Calories" autocomplete="off" [(ngModel)]="kcal" />
+    </mat-form-field>
+    <mat-form-field class="qty" appearance="outline" subscriptSizing="dynamic">
+      <input matInput name="carbs" inputmode="decimal" placeholder="Gluc. (g)" aria-label="Glucides" autocomplete="off" [(ngModel)]="carbs" />
+    </mat-form-field>
+    <mat-form-field class="qty" appearance="outline" subscriptSizing="dynamic">
+      <input matInput name="fat" inputmode="decimal" placeholder="Lip. (g)" aria-label="Lipides" autocomplete="off" [(ngModel)]="fat" />
+    </mat-form-field>
+    <mat-form-field class="qty" appearance="outline" subscriptSizing="dynamic">
+      <input matInput name="protein" inputmode="decimal" placeholder="Prot. (g)" aria-label="Protéines" autocomplete="off" [(ngModel)]="protein" />
     </mat-form-field>
     <button mat-flat-button>OK</button>
     <button mat-stroked-button type="button" (click)="open.set(false)">Annuler</button>

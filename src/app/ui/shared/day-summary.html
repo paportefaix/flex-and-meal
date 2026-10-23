@@ -1,7 +1,7 @@
 <div class="summary">
   <div class="stats">
     <app-stat label="Consommées" [value]="round(intake().kcal)" />
-    <app-stat label="Sport" [value]="burned() ? '−' + round(burned()) : 0" />
+    <app-stat label="Sport" [value]="round(burned())" />
     <app-stat label="Objectif" [value]="goal()" />
     <app-stat [label]="over() ? 'Dépassement' : 'Restantes'" [value]="round(abs(remaining()))" [tone]="over() ? 'bad' : 'good'" />
   </div>

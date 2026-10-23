@@ -2,7 +2,7 @@
   <mat-card appearance="outlined" class="card">
     <div class="card-head">
       <h2>Séries par muscle et par semaine</h2>
-      <span class="muted small">{{ weeks() }} dernières semaines</span>
+      <span class="muted small">{{ weeks() > 1 ? weeks() + ' dernières semaines' : 'dernière semaine' }}</span>
     </div>
     <div class="scroll-x">
       <div class="mheat" [style.grid-template-columns]="'5.5rem repeat(' + weeks() + ', minmax(1.6rem, 1fr)) 3rem'">
